@@ -1,6 +1,8 @@
 project_doc_fallback_filenames = ["AGENTS.md",".codex/AGENTS.md"]
 
 default_permissions = "custom"
+model = "gpt-5.5"
+model_reasoning_effort = "high"
 
 [permissions.custom.filesystem]
 "/Users/fumiakimuramatsu/ScreenShot" = "read"
@@ -15,10 +17,13 @@ trust_level = "trusted"
 [projects."/Users/fumiakimuramatsu/Program/visitory"]
 trust_level = "trusted"
 
-[projects."/Users/fumiakimuramatsu/Program/fade-in-alarm"]
+[projects."/Users/fumiakimuramatsu/Program/muraji-website"]
 trust_level = "trusted"
 
-[projects."/Users/fumiakimuramatsu/Program/muraji-website"]
+[projects."/Users/fumiakimuramatsu/Program/okosuyo"]
+trust_level = "trusted"
+
+[projects."/Users/fumiakimuramatsu/Program/Nurtown"]
 trust_level = "trusted"
 
 [tui.model_availability_nux]
