@@ -26,5 +26,11 @@ trust_level = "trusted"
 [projects."/Users/fumiakimuramatsu/Program/Nurtown"]
 trust_level = "trusted"
 
+[projects."/Users/fumiakimuramatsu/Program/dripshot"]
+trust_level = "trusted"
+
+[projects."/Users/fumiakimuramatsu/Program/Pochi"]
+trust_level = "trusted"
+
 [tui.model_availability_nux]
 "gpt-5.5" = 4

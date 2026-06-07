@@ -20,6 +20,7 @@ brew "tgenv"
 brew "tree"
 brew "trivy"
 brew "ecsk"
+brew "xcode-build-server"
 
 cask "alfred"
 # cask "kiro-cli" # 既にインストール済みだとエラーになるためコメントアウト
