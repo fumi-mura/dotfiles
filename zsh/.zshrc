@@ -46,6 +46,14 @@ alias gswc='git switch -c'
 alias gp='git pull'
 alias gd='git diff'
 alias gl='git log --oneline --graph --decorate'
+gmnew() {
+  if [ -z "$1" ]; then
+    echo "usage: gmnew branch-name-1"
+    return 1
+  fi
+
+  git switch main && git pull origin main && git switch -c "feature/$1"
+}
 
 ## Docker
 alias d='docker'
