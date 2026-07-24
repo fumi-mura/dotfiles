@@ -1,8 +1,11 @@
 project_doc_fallback_filenames = ["AGENTS.md",".codex/AGENTS.md"]
 
-default_permissions = "custom"
+default_permissions = ":workspace"
 model = "gpt-5.5"
 model_reasoning_effort = "high"
+
+[sandbox_workspace_write]
+network_access = true
 
 [permissions.custom.filesystem]
 "/Users/fumiakimuramatsu/ScreenShot" = "read"
@@ -11,13 +14,52 @@ model_reasoning_effort = "high"
 "/tmp" = "read"
 "/var/folders" = "read"
 
+[tui.model_availability_nux]
+"gpt-5.5" = 4
+
+[notice.model_migrations]
+"gpt-5.4" = "gpt-5.5"
+
 [projects."/Users/fumiakimuramatsu/Program/dotfiles"]
 trust_level = "trusted"
 
-[projects."/Users/fumiakimuramatsu/Program/visitory"]
+[projects."/Users/fumiakimuramatsu/Program/fumi-mura.github.io"]
+trust_level = "trusted"
+
+[projects."/Users/fumiakimuramatsu/Program/fumi-mura"]
+trust_level = "trusted"
+
+[projects."/Users/fumiakimuramatsu/Program/Visitory"]
+trust_level = "trusted"
+
+[projects."/Users/fumiakimuramatsu/Program/Patrimo"]
+trust_level = "trusted"
+
+[projects."/Users/fumiakimuramatsu/Program/dripshot"]
+trust_level = "trusted"
+
+[projects."/Users/fumiakimuramatsu/Program/pull-timer"]
+trust_level = "trusted"
+
+[projects."/Users/fumiakimuramatsu/Program/Reelo"]
+trust_level = "trusted"
+
+[projects."/Users/fumiakimuramatsu/Program/yomoka"]
 trust_level = "trusted"
 
 [projects."/Users/fumiakimuramatsu/Program/muraji-website"]
+trust_level = "trusted"
+
+[projects."/Users/fumiakimuramatsu/Program/Rakuobo"]
+trust_level = "trusted"
+
+[projects."/Users/fumiakimuramatsu/Program/tokutabi"]
+trust_level = "trusted"
+
+[projects."/Users/fumiakimuramatsu/Program/Pochi"]
+trust_level = "trusted"
+
+[projects."/Users/fumiakimuramatsu/Program/Pine"]
 trust_level = "trusted"
 
 [projects."/Users/fumiakimuramatsu/Program/okosuyo"]
@@ -25,12 +67,3 @@ trust_level = "trusted"
 
 [projects."/Users/fumiakimuramatsu/Program/Nurtown"]
 trust_level = "trusted"
-
-[projects."/Users/fumiakimuramatsu/Program/dripshot"]
-trust_level = "trusted"
-
-[projects."/Users/fumiakimuramatsu/Program/Pochi"]
-trust_level = "trusted"
-
-[tui.model_availability_nux]
-"gpt-5.5" = 4
