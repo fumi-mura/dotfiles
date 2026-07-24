@@ -1,3 +1,5 @@
 [user]
         email = 381704fumi@gmail.com
         name = fumi-mura
+[init]
+	defaultBranch = main
