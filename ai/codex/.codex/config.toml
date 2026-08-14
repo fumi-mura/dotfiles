@@ -1,18 +1,22 @@
 project_doc_fallback_filenames = ["AGENTS.md",".codex/AGENTS.md"]
 
-default_permissions = ":workspace"
 model = "gpt-5.6-terra"
 model_reasoning_effort = "high"
+# 新モデル (default_permissions) に移すとネットワーク許可の手段が無くなる。
+# 理由と解除条件: dotfiles の docs/decisions/0001-codex-sandbox-legacy.md
+sandbox_mode = "workspace-write"
 
 [sandbox_workspace_write]
+writable_roots = ["/Users/fumiakimuramatsu/Program"]
 network_access = true
 
-[permissions.custom.filesystem]
-"/Users/fumiakimuramatsu/ScreenShot" = "read"
-"/Users/fumiakimuramatsu/Downloads" = "read"
-"/Users/fumiakimuramatsu/Desktop" = "read"
-"/tmp" = "read"
-"/var/folders" = "read"
+[tui]
+status_line = [
+  "model-with-reasoning",
+  "context-used",
+  "weekly-limit",
+  "thread-id",
+]
 
 [tui.model_availability_nux]
 "gpt-5.5" = 4
