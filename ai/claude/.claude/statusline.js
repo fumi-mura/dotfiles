@@ -143,7 +143,6 @@ function writeRunCatSnapshot(data) {
 
     const rateLimits = data.rate_limits || {};
     const usedPercentage = data.context_window?.used_percentage;
-    const cost = data.cost?.total_cost_usd;
 
     const metrics = [];
     if (data.model?.display_name) {
@@ -159,9 +158,6 @@ function writeRunCatSnapshot(data) {
       buildPercentMetric('7d', rateLimits.seven_day?.used_percentage, formatResetTime(rateLimits.seven_day?.resets_at)),
     ]) {
       if (metric) metrics.push(metric);
-    }
-    if (typeof cost === 'number') {
-      metrics.push({ title: 'Cost', formattedValue: `$${cost.toFixed(2)}` });
     }
 
     const snapshot = {
@@ -185,10 +181,12 @@ function writeRunCatSnapshot(data) {
 function buildPercentMetric(title, percentage, resetTime) {
   if (typeof percentage !== 'number') return null;
 
+  const rounded = Math.round(percentage * 10) / 10;
+
   return {
     title,
-    formattedValue: `${percentage}%${resetTime ? ` (${resetTime})` : ''}`,
-    normalizedValue: Math.min(1, Math.max(0, percentage / 100))
+    formattedValue: `${rounded.toFixed(1)}%${resetTime ? ` (${resetTime})` : ''}`,
+    normalizedValue: Math.min(1, Math.max(0, rounded / 100))
   };
 }
 

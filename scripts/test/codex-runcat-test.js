@@ -58,8 +58,8 @@ const turnContext = baseLines.find(l => l.type === 'turn_context');
 
 const expectedModel = `${turnContext.payload.model} (${turnContext.payload.effort})`;
 const info = tokenCount.payload.info;
-const expectedCtx = Math.round(info.last_token_usage.total_tokens / info.model_context_window * 100);
-const expectedPrimary = Math.round(tokenCount.payload.rate_limits.primary.used_percent);
+const expectedCtx = Math.round(info.last_token_usage.total_tokens / info.model_context_window * 1000) / 10;
+const expectedPrimary = Math.round(tokenCount.payload.rate_limits.primary.used_percent * 10) / 10;
 
 console.log('case 1: 通常のセッション');
 {
@@ -77,14 +77,15 @@ console.log('case 1: 通常のセッション');
     check(`Model 行が ${expectedModel}`, model && model.formattedValue === expectedModel, JSON.stringify(model));
 
     const ctx = row(snapshot, 'Context');
-    check(`Context 行が ${expectedCtx}%`, ctx && ctx.formattedValue === `${expectedCtx}%`, JSON.stringify(ctx));
+    check(`Context 行が ${expectedCtx.toFixed(1)}%`,
+      ctx && ctx.formattedValue === `${expectedCtx.toFixed(1)}%`, JSON.stringify(ctx));
     check('Context の normalizedValue が使用率/100',
       ctx && Math.abs(ctx.normalizedValue - expectedCtx / 100) < 1e-9, ctx && ctx.normalizedValue);
 
     // window_minutes 10080 は 7 日
     const seven = row(snapshot, '7d');
     check('window_minutes 10080 が 7d 行になる',
-      seven && new RegExp(`^${expectedPrimary}% \\(~.+\\)$`).test(seven.formattedValue), JSON.stringify(seven));
+      seven && new RegExp(`^${expectedPrimary.toFixed(1)}% \\(~.+\\)$`).test(seven.formattedValue), JSON.stringify(seven));
     check('7d の normalizedValue が使用率/100',
       seven && Math.abs(seven.normalizedValue - expectedPrimary / 100) < 1e-9, seven && seven.normalizedValue);
 
@@ -102,8 +103,8 @@ console.log('case 2: primary と secondary の両方がある');
 
   const five = row(snapshot, '5h');
   const seven = row(snapshot, '7d');
-  check('window_minutes 300 が 5h 行になる', five && five.formattedValue.startsWith('42%'), JSON.stringify(five));
-  check('secondary も 7d 行になる', seven && seven.formattedValue.startsWith('13%'), JSON.stringify(seven));
+  check('window_minutes 300 が 5h 行になる', five && five.formattedValue.startsWith('42.4%'), JSON.stringify(five));
+  check('secondary も 7d 行になる', seven && seven.formattedValue.startsWith('12.6%'), JSON.stringify(seven));
   check('5h が 7d より先に並ぶ',
     snapshot.metrics.findIndex(m => m.title === '5h') < snapshot.metrics.findIndex(m => m.title === '7d'));
 }

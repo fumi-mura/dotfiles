@@ -183,11 +183,11 @@ function buildRateLimitMetric(window) {
 }
 
 function buildPercentMetric(title, percentage, resetTime) {
-  const rounded = Math.round(percentage);
+  const rounded = Math.round(percentage * 10) / 10;
 
   return {
     title,
-    formattedValue: `${rounded}%${resetTime ? ` (${resetTime})` : ''}`,
+    formattedValue: `${rounded.toFixed(1)}%${resetTime ? ` (${resetTime})` : ''}`,
     normalizedValue: Math.min(1, Math.max(0, rounded / 100))
   };
 }

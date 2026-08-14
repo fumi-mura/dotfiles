@@ -43,7 +43,6 @@ const expectedTokenDisplay = `${(expectedTokens / 1000).toFixed(1)}K`;
 const expectedCtx = base.context_window.used_percentage;
 const expectedFive = base.rate_limits.five_hour.used_percentage;
 const expectedSeven = base.rate_limits.seven_day.used_percentage;
-const expectedCost = `$${base.cost.total_cost_usd.toFixed(2)}`;
 
 console.log('case 1: 通常の payload');
 {
@@ -62,22 +61,22 @@ console.log('case 1: 通常の payload');
       model && model.formattedValue === `${base.model.display_name} (${base.effort.level})`, JSON.stringify(model));
 
     const ctx = row(snapshot, 'Context');
-    check(`Context 行が ${expectedCtx}%`, ctx && ctx.formattedValue === `${expectedCtx}%`, JSON.stringify(ctx));
+    check(`Context 行が ${expectedCtx.toFixed(1)}%`,
+      ctx && ctx.formattedValue === `${expectedCtx.toFixed(1)}%`, JSON.stringify(ctx));
     check('Context の normalizedValue が使用率/100',
       ctx && Math.abs(ctx.normalizedValue - expectedCtx / 100) < 1e-9, ctx && ctx.normalizedValue);
 
     const five = row(snapshot, '5h');
     check('5h 行に使用率とリセット時刻が入る',
-      five && new RegExp(`^${expectedFive}% \\(~.+\\)$`).test(five.formattedValue), JSON.stringify(five));
+      five && new RegExp(`^${expectedFive.toFixed(1)}% \\(~.+\\)$`).test(five.formattedValue), JSON.stringify(five));
     check('5h の normalizedValue が使用率/100',
       five && Math.abs(five.normalizedValue - expectedFive / 100) < 1e-9, five && five.normalizedValue);
 
     const seven = row(snapshot, '7d');
     check('7d 行に使用率とリセット時刻が入る',
-      seven && new RegExp(`^${expectedSeven}% \\(~.+\\)$`).test(seven.formattedValue), JSON.stringify(seven));
+      seven && new RegExp(`^${expectedSeven.toFixed(1)}% \\(~.+\\)$`).test(seven.formattedValue), JSON.stringify(seven));
 
-    const cost = row(snapshot, 'Cost');
-    check(`Cost 行が ${expectedCost}`, cost && cost.formattedValue === expectedCost, JSON.stringify(cost));
+    check('Cost 行は出力しない', !row(snapshot, 'Cost'), JSON.stringify(row(snapshot, 'Cost')));
   }
 
   check('ステータスラインにモデル名が出る', stdout.includes(`[${base.model.display_name}]`), stdout.trim());
@@ -127,6 +126,25 @@ console.log('case 5: context_window なし');
   check('Context 行が出ない', snapshot && !row(snapshot, 'Context'));
   check('Model 行は残る', snapshot && !!row(snapshot, 'Model'));
   check('ステータスラインは壊れない', stdout.includes(`[${base.model.display_name}]`), stdout.trim());
+}
+
+console.log('case 6: 小数を含む使用率');
+{
+  const payload = JSON.parse(JSON.stringify(base));
+  payload.context_window.used_percentage = 12.34;
+  payload.rate_limits.five_hour.used_percentage = 57.99999999999999;
+  payload.rate_limits.seven_day.used_percentage = 8.06;
+  const { snapshot } = run(payload);
+
+  const ctx = row(snapshot, 'Context');
+  const five = row(snapshot, '5h');
+  const seven = row(snapshot, '7d');
+
+  check('小数第一位まで残る', ctx && ctx.formattedValue === '12.3%', JSON.stringify(ctx));
+  check('浮動小数点の誤差が出ない', five && five.formattedValue.startsWith('58.0%'), JSON.stringify(five));
+  check('小数第二位は丸める', seven && seven.formattedValue.startsWith('8.1%'), JSON.stringify(seven));
+  check('normalizedValue も丸めた値を使う',
+    ctx && Math.abs(ctx.normalizedValue - 0.123) < 1e-9, ctx && ctx.normalizedValue);
 }
 
 console.log(failures === 0 ? '\nAll tests passed' : `\n${failures} test(s) failed`);
