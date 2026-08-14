@@ -93,6 +93,8 @@ console.log('case 1: 通常のセッション');
   }
 }
 
+// Codex は 2026-08 時点で 10080(7d) しか返さないが、window_minutes の解釈は Codex 側の
+// 都合で変わるので、5h が復活しても壊れないことを確かめておく
 console.log('case 2: primary と secondary の両方がある');
 {
   const lines = JSON.parse(JSON.stringify(baseLines));
@@ -103,7 +105,7 @@ console.log('case 2: primary と secondary の両方がある');
 
   const five = row(snapshot, '5h');
   const seven = row(snapshot, '7d');
-  check('window_minutes 300 が 5h 行になる', five && five.formattedValue.startsWith('42.4%'), JSON.stringify(five));
+  check('window_minutes 300 は 5h 行になる', five && five.formattedValue.startsWith('42.4%'), JSON.stringify(five));
   check('secondary も 7d 行になる', seven && seven.formattedValue.startsWith('12.6%'), JSON.stringify(seven));
   check('5h が 7d より先に並ぶ',
     snapshot.metrics.findIndex(m => m.title === '5h') < snapshot.metrics.findIndex(m => m.title === '7d'));
