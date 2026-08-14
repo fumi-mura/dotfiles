@@ -79,7 +79,10 @@ console.log('case 1: 通常の payload');
     check('Cost 行は出力しない', !row(snapshot, 'Cost'), JSON.stringify(row(snapshot, 'Cost')));
   }
 
-  check('ステータスラインにモデル名が出る', stdout.includes(`[${base.model.display_name}]`), stdout.trim());
+  check('ステータスラインにモデル名と思考レベルが出る',
+    stdout.includes(`[${base.model.display_name} (${base.effort.level})]`), stdout.trim());
+  check(`ステータスラインの割合が payload の used_percentage (${expectedCtx.toFixed(1)}%)`,
+    stdout.includes(`${expectedCtx.toFixed(1)}%`), stdout.trim());
   check('ステータスラインにディレクトリ名が出る', stdout.includes(path.basename(base.cwd)), stdout.trim());
   check(`ステータスラインのトークン数が payload 由来 (${expectedTokenDisplay})`,
     stdout.includes(expectedTokenDisplay), stdout.trim());
@@ -90,11 +93,13 @@ console.log('case 2: effort なし');
 {
   const payload = JSON.parse(JSON.stringify(base));
   delete payload.effort;
-  const { snapshot } = run(payload);
+  const { stdout, snapshot } = run(payload);
 
   const model = row(snapshot, 'Model');
   check('Model 行は表示名だけになる',
     model && model.formattedValue === base.model.display_name, JSON.stringify(model));
+  check('ステータスラインも表示名だけになる',
+    stdout.includes(`[${base.model.display_name}]`), stdout.trim());
 }
 
 console.log('case 3: rate_limits なし');
@@ -125,7 +130,8 @@ console.log('case 5: context_window なし');
 
   check('Context 行が出ない', snapshot && !row(snapshot, 'Context'));
   check('Model 行は残る', snapshot && !!row(snapshot, 'Model'));
-  check('ステータスラインは壊れない', stdout.includes(`[${base.model.display_name}]`), stdout.trim());
+  check('ステータスラインは壊れない',
+    stdout.includes(`[${base.model.display_name} (${base.effort.level})]`), stdout.trim());
 }
 
 console.log('case 6: 小数を含む使用率');
@@ -145,6 +151,9 @@ console.log('case 6: 小数を含む使用率');
   check('小数第二位は丸める', seven && seven.formattedValue.startsWith('8.1%'), JSON.stringify(seven));
   check('normalizedValue も丸めた値を使う',
     ctx && Math.abs(ctx.normalizedValue - 0.123) < 1e-9, ctx && ctx.normalizedValue);
+
+  const { stdout } = run(payload);
+  check('ステータスラインも小数第一位で揃う', stdout.includes('12.3%'), stdout.trim());
 }
 
 console.log(failures === 0 ? '\nAll tests passed' : `\n${failures} test(s) failed`);

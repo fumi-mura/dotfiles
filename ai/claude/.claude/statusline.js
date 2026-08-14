@@ -17,6 +17,7 @@ process.stdin.on('end', async () => {
 
     // Extract values
     const model = data.model?.display_name || 'Unknown';
+    const effort = data.effort?.level;
     const currentDir = data.workspace?.current_dir || data.cwd || '.';
     const dirName = path.basename(currentDir);
     const sessionId = data.session_id;
@@ -68,8 +69,11 @@ process.stdin.on('end', async () => {
       }
     }
 
-    // Calculate percentage
-    const percentage = Math.min(100, Math.round((totalTokens / COMPACTION_THRESHOLD) * 100));
+    // Prefer the window size Claude reports; fall back to the transcript-based estimate
+    const usedPercentage = data.context_window?.used_percentage;
+    const percentage = Math.min(100, roundPercent(typeof usedPercentage === 'number'
+      ? usedPercentage
+      : (totalTokens / COMPACTION_THRESHOLD) * 100));
 
     // Format token display
     const tokenDisplay = formatTokenCount(totalTokens);
@@ -80,7 +84,7 @@ process.stdin.on('end', async () => {
     if (percentage >= 72) percentageColor = '\x1b[91m'; // Bright Red (144K/200K)
 
     // Build status line
-    const statusLine = `[${model}] 📁 ${dirName}${branch} | 🪙 ${tokenDisplay} | ${percentageColor}${percentage}%\x1b[0m \x1b[90m| ${sessionId}\x1b[0m`;
+    const statusLine = `[${model}${effort ? ` (${effort})` : ''}] 📁 ${dirName}${branch} | 🪙 ${tokenDisplay} | ${percentageColor}${percentage.toFixed(1)}%\x1b[0m \x1b[90m| ${sessionId}\x1b[0m`;
 
     console.log(statusLine);
   } catch (error) {
@@ -178,10 +182,14 @@ function writeRunCatSnapshot(data) {
   }
 }
 
+function roundPercent(percentage) {
+  return Math.round(percentage * 10) / 10;
+}
+
 function buildPercentMetric(title, percentage, resetTime) {
   if (typeof percentage !== 'number') return null;
 
-  const rounded = Math.round(percentage * 10) / 10;
+  const rounded = roundPercent(percentage);
 
   return {
     title,
