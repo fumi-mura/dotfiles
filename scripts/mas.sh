@@ -17,7 +17,6 @@ APPS=(
   "441258766 Magnet"
   "434290957 Motion"
   "1230394683 Photo Retouch"
-  # "1429033973 RunCat" は App Store での配信終了（RunCat Neo へ移行）
   "6757801838 RunCat Neo"
 )
 
