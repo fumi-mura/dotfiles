@@ -2,7 +2,7 @@ SHELL := /bin/bash
 
 .DEFAULT_GOAL := help
 
-.PHONY: help install brew link mas macos
+.PHONY: help install brew link mas macos test
 
 help:
 	@printf "Available targets:\n"
@@ -11,6 +11,7 @@ help:
 	@printf "  make link     # Link dotfiles into HOME\n"
 	@printf "  make mas      # Install App Store applications\n"
 	@printf "  make macos    # Apply macOS settings\n"
+	@printf "  make test     # Run dotfiles tests\n"
 
 install:
 	@./scripts/install.sh
@@ -26,3 +27,6 @@ mas:
 
 macos:
 	@./scripts/macos.sh
+
+test:
+	@./scripts/test/run.sh

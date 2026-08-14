@@ -47,11 +47,18 @@ make mas
 make macos
 ```
 
+## Test
+
+```sh
+make test
+```
+
 ## Repository layout
 
 - `zsh`, `git`, `karabiner`: shell と各種ローカル設定
 - `ai`: Claude / Codex / Gemini の設定
 - `shared/ai`: AI ツール間で共有する指示や skills
+- `scripts/test`: セットアップスクリプトと AI ツール連携のテスト
 - `docs`: 手動設定や補足手順
 
 ## Other software list
