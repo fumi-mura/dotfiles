@@ -37,10 +37,16 @@ process.stdin.on('end', async () => {
       }
     }
 
+    // Write the RunCat Neo custom metrics snapshot
+    writeRunCatSnapshot(data);
+
     // Calculate token usage for current session
     let totalTokens = 0;
+    const currentUsage = data.context_window?.current_usage;
 
-    if (sessionId) {
+    if (currentUsage) {
+      totalTokens = sumUsage(currentUsage);
+    } else if (sessionId) {
       // Find all transcript files
       const projectsDir = path.join(process.env.HOME, '.claude', 'projects');
 
@@ -109,11 +115,7 @@ async function calculateTokensFromTranscript(filePath) {
     rl.on('close', () => {
       if (lastUsage) {
         // The last usage entry contains cumulative tokens
-        const totalTokens = (lastUsage.input_tokens || 0) +
-          (lastUsage.output_tokens || 0) +
-          (lastUsage.cache_creation_input_tokens || 0) +
-          (lastUsage.cache_read_input_tokens || 0);
-        resolve(totalTokens);
+        resolve(sumUsage(lastUsage));
       } else {
         resolve(0);
       }
@@ -123,6 +125,84 @@ async function calculateTokensFromTranscript(filePath) {
       reject(err);
     });
   });
+}
+
+function sumUsage(usage) {
+  return (usage.input_tokens || 0) +
+    (usage.output_tokens || 0) +
+    (usage.cache_creation_input_tokens || 0) +
+    (usage.cache_read_input_tokens || 0);
+}
+
+// RunCat Neo watches this file and renders it as a dashboard card.
+// Schema: https://github.com/runcat-dev/RunCatNeo/blob/main/docs/CustomMetricsSchema.md
+function writeRunCatSnapshot(data) {
+  try {
+    const outPath = process.env.RUNCAT_OUT_FILE ||
+      path.join(process.env.HOME, '.claude', 'runcat-usage.json');
+
+    const rateLimits = data.rate_limits || {};
+    const usedPercentage = data.context_window?.used_percentage;
+    const cost = data.cost?.total_cost_usd;
+
+    const metrics = [];
+    if (data.model?.display_name) {
+      const effort = data.effort?.level;
+      metrics.push({
+        title: 'Model',
+        formattedValue: `${data.model.display_name}${effort ? ` (${effort})` : ''}`
+      });
+    }
+    for (const metric of [
+      buildPercentMetric('Context', usedPercentage),
+      buildPercentMetric('5h', rateLimits.five_hour?.used_percentage, formatResetTime(rateLimits.five_hour?.resets_at)),
+      buildPercentMetric('7d', rateLimits.seven_day?.used_percentage, formatResetTime(rateLimits.seven_day?.resets_at)),
+    ]) {
+      if (metric) metrics.push(metric);
+    }
+    if (typeof cost === 'number') {
+      metrics.push({ title: 'Cost', formattedValue: `$${cost.toFixed(2)}` });
+    }
+
+    const snapshot = {
+      title: 'Claude Code',
+      symbol: 'staroflife',
+      metrics,
+      lastUpdatedDate: new Date().toISOString().replace(/\.\d{3}Z$/, 'Z')
+    };
+
+    // Write atomically so RunCat never reads a half-written file
+    const outDir = path.dirname(outPath);
+    fs.mkdirSync(outDir, { recursive: true });
+    const tmpPath = path.join(outDir, `.runcat-${process.pid}.tmp`);
+    fs.writeFileSync(tmpPath, JSON.stringify(snapshot));
+    fs.renameSync(tmpPath, outPath);
+  } catch (e) {
+    // RunCat連携の失敗でステータスラインを壊さない
+  }
+}
+
+function buildPercentMetric(title, percentage, resetTime) {
+  if (typeof percentage !== 'number') return null;
+
+  return {
+    title,
+    formattedValue: `${percentage}%${resetTime ? ` (${resetTime})` : ''}`,
+    normalizedValue: Math.min(1, Math.max(0, percentage / 100))
+  };
+}
+
+function formatResetTime(epochSeconds) {
+  if (typeof epochSeconds !== 'number') return null;
+
+  const reset = new Date(epochSeconds * 1000);
+  if (isNaN(reset.getTime())) return null;
+
+  const hourMinute = `${String(reset.getHours()).padStart(2, '0')}:${String(reset.getMinutes()).padStart(2, '0')}`;
+  if (reset.toDateString() === new Date().toDateString()) {
+    return `~${hourMinute}`;
+  }
+  return `~${reset.getMonth() + 1}/${reset.getDate()} ${hourMinute}`;
 }
 
 function formatTokenCount(tokens) {

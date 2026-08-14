@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$HOME/.codex/runcat-usage.js\"",
+            "description": "Write the RunCat Neo snapshot"
+          }
+        ]
+      }
+    ]
+  }
+}

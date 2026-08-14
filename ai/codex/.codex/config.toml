@@ -85,3 +85,8 @@ trust_level = "trusted"
 
 [projects."/Users/fumiakimuramatsu/Program/promokit"]
 trust_level = "trusted"
+
+[hooks.state]
+
+[hooks.state."/Users/fumiakimuramatsu/.codex/hooks.json:stop:0:0"]
+trusted_hash = "sha256:e3db6ab101a532dca641f8bf3840782b1812e1cd798ae1152a7d3441c2a4148b"
