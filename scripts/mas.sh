@@ -7,6 +7,20 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 # shellcheck source=./lib.sh
 source "${SCRIPT_DIR}/lib.sh"
 
+APPS=(
+  "937984704 Amphetamine"
+  "424390742 Compressor"
+  "424389933 Final Cut Pro"
+  "682658836 GarageBand"
+  "6447125648 Gestimer"
+  "634148309 Logic Pro"
+  "441258766 Magnet"
+  "434290957 Motion"
+  "1230394683 Photo Retouch"
+  # "1429033973 RunCat" は App Store での配信終了（RunCat Neo へ移行）
+  "6757801838 RunCat Neo"
+)
+
 main() {
   if ! command -v mas >/dev/null 2>&1; then
     error "mas is not installed. Run 'make brew' first."
@@ -14,16 +28,30 @@ main() {
   fi
 
   log "Install App Store applications"
-  mas install 937984704
-  mas install 424390742
-  mas install 424389933
-  mas install 682658836
-  mas install 6447125648
-  mas install 634148309
-  mas install 441258766
-  mas install 434290957
-  mas install 1230394683
-  mas install 1429033973
+
+  local failed_count=0
+  local failed_list=""
+  local app id name
+
+  for app in "${APPS[@]}"; do
+    id="${app%% *}"
+    name="${app#* }"
+
+    if ! mas install "${id}"; then
+      warn "Failed to install ${name} (${id})"
+      failed_count=$((failed_count + 1))
+      failed_list="${failed_list}  - ${name} (${id})"$'\n'
+    fi
+  done
+
+  if [[ "${failed_count}" -gt 0 ]]; then
+    log "Failed to install ${failed_count} app(s)"
+    printf '%s' "${failed_list}"
+    printf '\nmas cannot install apps that have never been obtained with this Apple Account.\nGet them once from the App Store app, then run this again.\n'
+    exit 1
+  fi
+
+  log "All App Store applications are installed"
 }
 
 main "$@"
