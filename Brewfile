@@ -48,3 +48,7 @@ cask "slack"
 cask "vrew"
 cask "visual-studio-code"
 cask "zoom"
+
+# font
+cask "font-noto-sans-jp"
+cask "font-zen-kaku-gothic-new"

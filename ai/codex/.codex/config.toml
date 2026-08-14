@@ -1,7 +1,7 @@
 project_doc_fallback_filenames = ["AGENTS.md",".codex/AGENTS.md"]
 
 default_permissions = ":workspace"
-model = "gpt-5.5"
+model = "gpt-5.6-terra"
 model_reasoning_effort = "high"
 
 [sandbox_workspace_write]
@@ -66,4 +66,22 @@ trust_level = "trusted"
 trust_level = "trusted"
 
 [projects."/Users/fumiakimuramatsu/Program/Nurtown"]
+trust_level = "trusted"
+
+[projects."/Users/fumiakimuramatsu/Program/fumi-coach"]
+trust_level = "trusted"
+
+[projects."/Users/fumiakimuramatsu/Program/fastlane-shared"]
+trust_level = "trusted"
+
+[projects."/Users/fumiakimuramatsu/Program/inspect-app-tool"]
+trust_level = "trusted"
+
+[projects."/Users/fumiakimuramatsu/Program/mokumoku"]
+trust_level = "trusted"
+
+[projects."/Users/fumiakimuramatsu/Program/appstore-research"]
+trust_level = "trusted"
+
+[projects."/Users/fumiakimuramatsu/Program/promokit"]
 trust_level = "trusted"

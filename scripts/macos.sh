@@ -37,6 +37,9 @@ main() {
   defaults write -g InitialKeyRepeat -int 15
   defaults write NSGlobalDomain NSAutomaticSpellingCorrectionEnabled -bool false
   defaults write NSGlobalDomain NSAutomaticCapitalizationEnabled -bool false
+  defaults write NSGlobalDomain NSAutomaticQuoteSubstitutionEnabled -bool false
+  defaults write NSGlobalDomain NSUserQuotesArray -array '"\""' '"\""' "\"'\"" "\"'\""
+  defaults write NSGlobalDomain NSAutomaticDashSubstitutionEnabled -bool false
 
   log "Setup Trackpad"
   defaults write com.apple.AppleMultitouchTrackpad Clicking -bool true
