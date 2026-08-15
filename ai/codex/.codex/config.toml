@@ -94,3 +94,12 @@ trust_level = "trusted"
 
 [hooks.state."/Users/fumiakimuramatsu/.codex/hooks.json:stop:0:0"]
 trusted_hash = "sha256:e3db6ab101a532dca641f8bf3840782b1812e1cd798ae1152a7d3441c2a4148b"
+
+[hooks.state."/Users/fumiakimuramatsu/.codex/hooks.json:permission_request:0:0"]
+trusted_hash = "sha256:bb9e9cea691a822dc2fccbd2771fd06d214e9a1de79461eaaf69dd8c4a3d9291"
+
+[hooks.state."/Users/fumiakimuramatsu/.codex/hooks.json:subagent_stop:0:0"]
+trusted_hash = "sha256:cf2d4ed2539f10b636895dec5c942d758526e9f034496bf6b09fd5702a296ba9"
+
+[hooks.state."/Users/fumiakimuramatsu/.codex/hooks.json:stop:0:1"]
+trusted_hash = "sha256:8a30b2699547e2885b08a0a3a50dd43ba63d63d415b32ae2fc38425c704e007b"

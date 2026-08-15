@@ -7,6 +7,33 @@
             "type": "command",
             "command": "\"$HOME/.codex/runcat-usage.js\"",
             "description": "Write the RunCat Neo snapshot"
+          },
+          {
+            "type": "command",
+            "command": "echo '{\"cwd\": \"'\"$(pwd)\"'\", \"notification_type\": \"stop\"}' | NOTIFY_TITLE=Codex \"$HOME/.codex/hooks/notify.sh\"",
+            "description": "Notify that the turn finished"
+          }
+        ]
+      }
+    ],
+    "PermissionRequest": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '{\"cwd\": \"'\"$(pwd)\"'\", \"notification_type\": \"permission_prompt\"}' | NOTIFY_TITLE=Codex \"$HOME/.codex/hooks/notify.sh\"",
+            "description": "Notify that Codex is waiting for approval"
+          }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '{\"cwd\": \"'\"$(pwd)\"'\", \"notification_type\": \"agent_completed\"}' | NOTIFY_TITLE=Codex \"$HOME/.codex/hooks/notify.sh\"",
+            "description": "Notify that a subagent finished"
           }
         ]
       }
