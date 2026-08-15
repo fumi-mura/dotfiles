@@ -8,6 +8,19 @@ const { execSync } = require('child_process');
 // Constants
 const COMPACTION_THRESHOLD = 200000
 
+// 基本 ANSI カラーはターミナルのパレットで原色になるため、Codex と同じく 24bit で指定する
+const RESET = '\x1b[0m';
+const rgb = (r, g, b) => `\x1b[38;2;${r};${g};${b}m`;
+
+const MUTED = rgb(107, 115, 148);
+const DIRECTORY = rgb(158, 206, 106);
+const BRANCH = rgb(122, 162, 247);
+const LIMIT = rgb(187, 154, 247);
+const CONTEXT = rgb(169, 177, 214);
+const CONTEXT_WARN = rgb(224, 175, 104);
+const CONTEXT_DANGER = rgb(247, 118, 142);
+const SEPARATOR = `${MUTED} · ${RESET}`
+
 // Read JSON from stdin
 let input = '';
 process.stdin.on('data', chunk => input += chunk);
@@ -31,7 +44,7 @@ process.stdin.on('end', async () => {
           encoding: 'utf-8'
         }).trim();
         if (branchName) {
-          branch = ` 🌿 ${branchName}`;
+          branch = branchName;
         }
       } catch (e) {
         // Gitコマンドエラーは無視
@@ -75,16 +88,21 @@ process.stdin.on('end', async () => {
       ? usedPercentage
       : (totalTokens / COMPACTION_THRESHOLD) * 100));
 
-    // Format token display
-    const tokenDisplay = formatTokenCount(totalTokens);
-
-    // Color coding for percentage (same ratio as original article with 160K base)
-    let percentageColor = '\x1b[32m'; // Green
-    if (percentage >= 56) percentageColor = '\x1b[33m'; // Yellow (112K/200K)
-    if (percentage >= 72) percentageColor = '\x1b[91m'; // Bright Red (144K/200K)
+    let percentageColor = CONTEXT;
+    if (percentage >= 56) percentageColor = CONTEXT_WARN;
+    if (percentage >= 72) percentageColor = CONTEXT_DANGER;
 
     // Build status line
-    const statusLine = `[${model}${effort ? ` (${effort})` : ''}] 📁 ${dirName}${branch} | 🪙 ${tokenDisplay} | ${percentageColor}${percentage.toFixed(1)}%\x1b[0m \x1b[90m| ${sessionId}\x1b[0m`;
+    const segments = [
+      `${model}${effort ? ` ${effort}` : ''}`,
+      `${DIRECTORY}${dirName}${RESET}`
+    ];
+    if (branch) segments.push(`${BRANCH}${branch}${RESET}`);
+    segments.push(`${percentageColor}Context ${percentage.toFixed(1)}% used${RESET}`);
+    segments.push(...formatRateLimits(data.rate_limits));
+    segments.push(`${MUTED}${sessionId}${RESET}`);
+
+    const statusLine = segments.join(SEPARATOR);
 
     console.log(statusLine);
   } catch (error) {
@@ -182,6 +200,18 @@ function writeRunCatSnapshot(data) {
   }
 }
 
+// Codex は残量を出すので、使用量であることを明示して読み違えを防ぐ
+function formatRateLimits(rateLimits) {
+  const parts = [
+    ['5h', rateLimits?.five_hour?.used_percentage],
+    ['7d', rateLimits?.seven_day?.used_percentage]
+  ]
+    .filter(([, value]) => typeof value === 'number')
+    .map(([label, value]) => `${label} ${Math.round(value)}%`);
+
+  return parts.length ? [`${LIMIT}${parts.join('/')} used${RESET}`] : [];
+}
+
 function roundPercent(percentage) {
   return Math.round(percentage * 10) / 10;
 }
@@ -209,13 +239,4 @@ function formatResetTime(epochSeconds) {
     return `~${hourMinute}`;
   }
   return `~${reset.getMonth() + 1}/${reset.getDate()} ${hourMinute}`;
-}
-
-function formatTokenCount(tokens) {
-  if (tokens >= 1000000) {
-    return `${(tokens / 1000000).toFixed(1)}M`;
-  } else if (tokens >= 1000) {
-    return `${(tokens / 1000).toFixed(1)}K`;
-  }
-  return tokens.toString();
 }

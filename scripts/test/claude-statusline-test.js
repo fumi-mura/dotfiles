@@ -31,6 +31,10 @@ function run(payload) {
   return { stdout, snapshot };
 }
 
+function plain(text) {
+  return text.replace(/\x1b\[[0-9;]*m/g, '');
+}
+
 function row(snapshot, title) {
   return (snapshot.metrics || []).find(m => m.title === title);
 }
@@ -80,13 +84,32 @@ console.log('case 1: 通常の payload');
   }
 
   check('ステータスラインにモデル名と思考レベルが出る',
-    stdout.includes(`[${base.model.display_name} (${base.effort.level})]`), stdout.trim());
+    plain(stdout).includes(`${base.model.display_name} ${base.effort.level} ·`), stdout.trim());
+  check('ステータスラインに絵文字を使わない',
+    !/[\u{1F300}-\u{1FAFF}]/u.test(stdout), stdout.trim());
+  check('上限は 5h/7d をまとめて used を付ける',
+    / · 5h \d+%\/7d \d+% used ·/.test(plain(stdout)) && !plain(stdout).includes('|'), stdout.trim());
   check(`ステータスラインの割合が payload の used_percentage (${expectedCtx.toFixed(1)}%)`,
-    stdout.includes(`${expectedCtx.toFixed(1)}%`), stdout.trim());
+    plain(stdout).includes(`Context ${expectedCtx.toFixed(1)}% used`), stdout.trim());
   check('ステータスラインにディレクトリ名が出る', stdout.includes(path.basename(base.cwd)), stdout.trim());
-  check(`ステータスラインのトークン数が payload 由来 (${expectedTokenDisplay})`,
-    stdout.includes(expectedTokenDisplay), stdout.trim());
   check('ステータスラインにセッションIDが出る', stdout.includes(base.session_id), stdout.trim());
+  check('24bit カラーで指定する', /\x1b\[38;2;\d+;\d+;\d+m/.test(stdout), stdout.trim());
+  check('基本 ANSI カラーを使わない', !/\x1b\[(3[0-7]|9[0-7])m/.test(stdout), stdout.trim());
+
+  const colorOf = (label) => (new RegExp(`\\x1b\\[(38;2;[\\d;]+)m${label}`).exec(stdout) || [])[1];
+  const dirColor = colorOf(path.basename(base.cwd));
+  const ctxColor = colorOf('Context');
+  check('ディレクトリと Context が別の色', dirColor && ctxColor && dirColor !== ctxColor,
+    `dir=${dirColor} ctx=${ctxColor}`);
+  check('上限に色が付く', /\x1b\[38;2;[\d;]+m5h \d+%/.test(stdout), stdout.trim());
+  check('セッションIDに色が付く', new RegExp(`\\x1b\\[38;2;[\\d;]+m${base.session_id}`).test(stdout), stdout.trim());
+  check(`ステータスラインに 5h が出る (${expectedFive}%)`,
+    stdout.includes(`5h ${expectedFive}%`), stdout.trim());
+  check(`ステータスラインに 7d が出る (${expectedSeven}%)`,
+    stdout.includes(`7d ${expectedSeven}%`), stdout.trim());
+  check('使用量であることを明示する', plain(stdout).includes('% used'), stdout.trim());
+  check('ステータスラインからトークン数を外す',
+    !stdout.includes(expectedTokenDisplay), stdout.trim());
 }
 
 console.log('case 2: effort なし');
@@ -99,7 +122,7 @@ console.log('case 2: effort なし');
   check('Model 行は表示名だけになる',
     model && model.formattedValue === base.model.display_name, JSON.stringify(model));
   check('ステータスラインも表示名だけになる',
-    stdout.includes(`[${base.model.display_name}]`), stdout.trim());
+    plain(stdout).includes(`${base.model.display_name} ·`), stdout.trim());
 }
 
 console.log('case 3: rate_limits なし');
@@ -111,6 +134,10 @@ console.log('case 3: rate_limits なし');
   check('5h 行が出ない', snapshot && !row(snapshot, '5h'));
   check('7d 行が出ない', snapshot && !row(snapshot, '7d'));
   check('Context 行は残る', snapshot && !!row(snapshot, 'Context'));
+
+  const { stdout } = run(payload);
+  check('ステータスラインにも 5h / 7d が出ない',
+    !stdout.includes('5h ') && !stdout.includes('7d '), stdout.trim());
 }
 
 console.log('case 4: 空 payload');
@@ -131,7 +158,7 @@ console.log('case 5: context_window なし');
   check('Context 行が出ない', snapshot && !row(snapshot, 'Context'));
   check('Model 行は残る', snapshot && !!row(snapshot, 'Model'));
   check('ステータスラインは壊れない',
-    stdout.includes(`[${base.model.display_name} (${base.effort.level})]`), stdout.trim());
+    plain(stdout).includes(`${base.model.display_name} ${base.effort.level} ·`), stdout.trim());
 }
 
 console.log('case 6: 小数を含む使用率');
