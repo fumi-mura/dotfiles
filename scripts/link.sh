@@ -58,11 +58,13 @@ main() {
   link_tree "${ROOT_DIR}/ai/claude" "${HOME}"
   link_file "${ROOT_DIR}/shared/ai/AGENTS.md" "${HOME}/.claude/CLAUDE.md"
   link_tree "${ROOT_DIR}/shared/ai/skills" "${HOME}/.claude/skills"
+  link_file "${ROOT_DIR}/shared/ai/hooks/notify.sh" "${HOME}/.claude/hooks/notify.sh"
 
   log "Link Codex settings"
   link_tree "${ROOT_DIR}/ai/codex" "${HOME}"
   link_file "${ROOT_DIR}/shared/ai/AGENTS.md" "${HOME}/.codex/AGENTS.md"
   link_directory_tree "${ROOT_DIR}/shared/ai/skills" "${HOME}/.codex/skills"
+  link_file "${ROOT_DIR}/shared/ai/hooks/notify.sh" "${HOME}/.codex/hooks/notify.sh"
 
   log "Link Gemini settings"
   link_tree "${ROOT_DIR}/ai/gemini" "${HOME}"
