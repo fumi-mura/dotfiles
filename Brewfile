@@ -29,7 +29,6 @@ brew "xcode-build-server"
 cask "alfred"
 # cask "kiro-cli" # 既にインストール済みだとエラーになるためコメントアウト
 cask "appcleaner"
-cask "claude"
 cask "claude-code"
 cask "codex"
 cask "discord"
