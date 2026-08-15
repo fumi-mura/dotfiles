@@ -13,6 +13,8 @@ network_access = true
 [tui]
 status_line = [
   "model-with-reasoning",
+  "project-name",
+  "git-branch",
   "context-used",
   "weekly-limit",
   "thread-id",
