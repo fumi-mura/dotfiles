@@ -50,6 +50,9 @@ cask "vrew"
 cask "visual-studio-code"
 cask "zoom"
 
-# font
+# Font
 cask "font-noto-sans-jp"
 cask "font-zen-kaku-gothic-new"
+
+# Manual installs
+## pen.devはGUIからのみインストール可能
