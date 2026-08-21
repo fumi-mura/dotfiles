@@ -1,6 +1,6 @@
 project_doc_fallback_filenames = ["AGENTS.md",".codex/AGENTS.md"]
 
-model = "gpt-5.6-terra"
+model = "gpt-5.6-sol"
 model_reasoning_effort = "high"
 # 新モデル (default_permissions) に移すとネットワーク許可の手段が無くなる。
 # 理由と解除条件: dotfiles の docs/decisions/0001-codex-sandbox-legacy.md
