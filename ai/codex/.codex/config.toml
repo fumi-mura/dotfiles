@@ -1,27 +1,50 @@
-project_doc_fallback_filenames = ["AGENTS.md",".codex/AGENTS.md"]
+project_doc_fallback_filenames = [ "AGENTS.md", ".codex/AGENTS.md" ]
+model = "gpt-5.5"
+model_reasoning_effort = "medium"
+default_permissions = "program-edit"
 
-model = "gpt-5.6-sol"
-model_reasoning_effort = "high"
-# 新モデル (default_permissions) に移すとネットワーク許可の手段が無くなる。
-# 理由と解除条件: dotfiles の docs/decisions/0001-codex-sandbox-legacy.md
-sandbox_mode = "workspace-write"
+[permissions.program-edit]
+description = "Program 配下を編集しつつ、管理領域と資格情報を保護する。"
+extends = ":workspace"
 
-[sandbox_workspace_write]
-writable_roots = ["/Users/fumiakimuramatsu/Program"]
-network_access = true
+[permissions.program-edit.workspace_roots]
+"/Users/fumiakimuramatsu/Program" = true
+
+[permissions.program-edit.filesystem.":workspace_roots"]
+".agents" = "write"
+".env" = "deny"
+".env.*" = "deny"
+"**/.env" = "deny"
+"**/.env.*" = "deny"
+".netrc" = "deny"
+"**/.netrc" = "deny"
+"*.pem" = "deny"
+"**/*.pem" = "deny"
+"*.key" = "deny"
+"**/*.key" = "deny"
+"*.p8" = "deny"
+"**/*.p8" = "deny"
+"*.p12" = "deny"
+"**/*.p12" = "deny"
+"*.mobileprovision" = "deny"
+"**/*.mobileprovision" = "deny"
+"credentials.*" = "deny"
+"**/credentials.*" = "deny"
+"secrets.*" = "deny"
+"**/secrets.*" = "deny"
+
+[permissions.program-edit.network]
+enabled = true
 
 [tui]
-status_line = [
-  "model-with-reasoning",
-  "project-name",
-  "git-branch",
-  "context-used",
-  "weekly-limit",
-  "thread-id",
-]
+status_line = [ "model-with-reasoning", "project-name", "git-branch", "context-used", "five-hour-limit", "weekly-limit", "thread-id" ]
 
 [tui.model_availability_nux]
 "gpt-5.5" = 4
+gpt-6-astra = 4
+
+[notice]
+hide_rate_limit_model_nudge = true
 
 [notice.model_migrations]
 "gpt-5.4" = "gpt-5.5"
@@ -92,7 +115,8 @@ trust_level = "trusted"
 [projects."/Users/fumiakimuramatsu/Program/promokit"]
 trust_level = "trusted"
 
-[hooks.state]
+[projects."/Users/fumiakimuramatsu/Program/asc-screenshots"]
+trust_level = "trusted"
 
 [hooks.state."/Users/fumiakimuramatsu/.codex/hooks.json:stop:0:0"]
 trusted_hash = "sha256:e3db6ab101a532dca641f8bf3840782b1812e1cd798ae1152a7d3441c2a4148b"
@@ -105,3 +129,7 @@ trusted_hash = "sha256:cf2d4ed2539f10b636895dec5c942d758526e9f034496bf6b09fd5702
 
 [hooks.state."/Users/fumiakimuramatsu/.codex/hooks.json:stop:0:1"]
 trusted_hash = "sha256:8a30b2699547e2885b08a0a3a50dd43ba63d63d415b32ae2fc38425c704e007b"
+
+[mcp_servers.pencil]
+command = "/Applications/Pen.app/Contents/Resources/app.asar.unpacked/out/mcp-server-darwin-arm64"
+args = [ "--app", "desktop", "--agent", "codexCLI" ]

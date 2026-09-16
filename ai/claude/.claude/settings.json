@@ -127,7 +127,8 @@
       "mcp__github__get_pull_request",
       "mcp__github__get_pull_request_comments",
       "mcp__devinwiki__read_wiki_contents",
-      "mcp__devinwiki__ask_question"
+      "mcp__devinwiki__ask_question",
+      "mcp__pencil"
     ],
     "deny": [
       "Bash(rm -rf:*)",
@@ -175,6 +176,14 @@
     "ruby-lsp@claude-plugins-official": true
   },
   "effortLevel": "high",
+  "modelSettings": {
+    "claude-sonnet-5": {
+      "effortLevel": "medium"
+    },
+    "claude-opus-5": {
+      "effortLevel": "medium"
+    }
+  },
   "tui": "fullscreen",
   "skipDangerousModePermissionPrompt": true,
   "agentPushNotifEnabled": true,

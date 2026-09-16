@@ -206,5 +206,116 @@ console.log('case 8: 巨大なセッションでも末尾だけ読む');
   fs.rmSync(home, { recursive: true, force: true });
 }
 
+
+// 上限に弾かれたターンはトークンを消費しないので info が null になる
+function withoutInfo(lines) {
+  lines.find(l => l.payload && l.payload.type === 'token_count').payload.info = null;
+  return lines;
+}
+
+function withRateLimits(lines, primary, secondary) {
+  const rl = lines.find(l => l.payload && l.payload.type === 'token_count').payload.rate_limits;
+  rl.primary = primary;
+  rl.secondary = secondary;
+  return lines;
+}
+
+const LIMIT_MESSAGE_PREFIX =
+  "You've hit your usage limit. Upgrade to Pro (https://chatgpt.com/explore/pro), " +
+  'visit https://chatgpt.com/codex/settings/usage to purchase more credits or ';
+
+function limitErrorLine(resetText) {
+  return {
+    timestamp: '2026-08-11T14:42:00.000Z',
+    ordinal: 40,
+    type: 'event_msg',
+    payload: {
+      type: 'task_complete',
+      turn_id: '22222222-2222-2222-2222-222222222222',
+      last_agent_message: null,
+      error: {
+        message: `${LIMIT_MESSAGE_PREFIX}${resetText}`,
+        codex_error_info: 'usage_limit_exceeded'
+      }
+    }
+  };
+}
+
+function copy() {
+  return JSON.parse(JSON.stringify(baseLines));
+}
+
+console.log('case 9: info が null でもスナップショットを書き出す');
+{
+  const { snapshot } = run(makeHome([withoutInfo(copy())]));
+
+  check('スナップショットが書き出される', snapshot !== null);
+  if (snapshot) {
+    check('Model 行は残る', !!row(snapshot, 'Model'), JSON.stringify(snapshot.metrics));
+    check('Context 行は作らない', !row(snapshot, 'Context'), JSON.stringify(snapshot.metrics));
+    check('rate limit 行は残る', !!row(snapshot, '7d'), JSON.stringify(snapshot.metrics));
+  }
+}
+
+console.log('case 10: 上限到達が日付付きなら 7d を 100% にする');
+{
+  const lines = withRateLimits(withoutInfo(copy()), null, null);
+  lines.push(limitErrorLine('try again at Sep 19th, 2026 5:57 PM.'));
+  const { snapshot } = run(makeHome([lines]));
+
+  const seven = row(snapshot, '7d');
+  check('7d 行が 100% になる', seven && seven.formattedValue === '100.0% (~9/19 17:57)', JSON.stringify(seven));
+  check('normalizedValue が 1', seven && seven.normalizedValue === 1, seven && seven.normalizedValue);
+  check('5h 行は作らない', !row(snapshot, '5h'), JSON.stringify(snapshot.metrics));
+}
+
+console.log('case 11: 上限到達が時刻だけなら 5h を 100% にする');
+{
+  const lines = withRateLimits(withoutInfo(copy()), null, null);
+  lines.push(limitErrorLine('try again at 3:57 AM.'));
+  const { snapshot } = run(makeHome([lines]));
+
+  const five = row(snapshot, '5h');
+  check('5h 行が 100% になる', five && /^100\.0% \(~.*03:57\)$/.test(five.formattedValue), JSON.stringify(five));
+  check('7d 行は作らない', !row(snapshot, '7d'), JSON.stringify(snapshot.metrics));
+}
+
+console.log('case 12: 窓を判定できなければ行を作らない');
+{
+  const lines = withRateLimits(withoutInfo(copy()), null, null);
+  lines.push(limitErrorLine('try again later.'));
+  const { snapshot } = run(makeHome([lines]));
+
+  check('5h 行を作らない', !row(snapshot, '5h'), JSON.stringify(snapshot.metrics));
+  check('7d 行を作らない', !row(snapshot, '7d'), JSON.stringify(snapshot.metrics));
+}
+
+console.log('case 13: 上限到達より後の token_count があれば通常表示に戻す');
+{
+  const lines = copy();
+  // token_count より前 = 上限到達のほうが古い
+  lines.splice(lines.length - 1, 0, limitErrorLine('try again at Sep 19th, 2026 5:57 PM.'));
+  const { snapshot } = run(makeHome([lines]));
+
+  const seven = row(snapshot, '7d');
+  check('7d 行は実測値のまま', seven && seven.formattedValue.startsWith(`${expectedPrimary.toFixed(1)}%`), JSON.stringify(seven));
+}
+
+console.log('case 14: 窓の値があっても該当する窓だけ 100% に上書きする');
+{
+  const lines = withRateLimits(copy(),
+    { used_percent: 42.4, window_minutes: 300, resets_at: 1787042365 },
+    { used_percent: 12.6, window_minutes: 10080, resets_at: 1787042365 });
+  lines.push(limitErrorLine('try again at Sep 19th, 2026 5:57 PM.'));
+  const { snapshot } = run(makeHome([lines]));
+
+  const five = row(snapshot, '5h');
+  const seven = row(snapshot, '7d');
+  check('5h 行は実測値のまま', five && five.formattedValue.startsWith('42.4%'), JSON.stringify(five));
+  check('7d 行が 100% になる', seven && seven.formattedValue === '100.0% (~9/19 17:57)', JSON.stringify(seven));
+  check('5h が 7d より先に並ぶ',
+    snapshot.metrics.findIndex(m => m.title === '5h') < snapshot.metrics.findIndex(m => m.title === '7d'));
+}
+
 console.log(failures === 0 ? '\nAll tests passed' : `\n${failures} test(s) failed`);
 process.exit(failures === 0 ? 0 : 1);

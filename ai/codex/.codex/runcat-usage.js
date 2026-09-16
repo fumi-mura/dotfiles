@@ -23,7 +23,8 @@ function main() {
     if (!sessionFile) return;
 
     const state = readSessionState(sessionFile);
-    if (!state.info) return;
+    // 上限に弾かれたターンは info が null になるので、token_count の有無だけで判断する
+    if (!state.tokenCount) return;
 
     writeSnapshot(buildSnapshot(state));
   } catch (e) {
@@ -66,7 +67,15 @@ function findLatestSession(sessionsDir) {
 }
 
 function readSessionState(sessionFile) {
-  const state = { info: null, rateLimits: null, model: null, effort: null };
+  const state = {
+    tokenCount: false,
+    info: null,
+    rateLimits: null,
+    model: null,
+    effort: null,
+    limitMessage: null,
+    sawTaskComplete: false
+  };
   const fd = fs.openSync(sessionFile, 'r');
 
   try {
@@ -85,7 +94,7 @@ function readSessionState(sessionFile) {
 
       for (let i = lines.length - 1; i >= 0; i--) {
         applyLine(state, lines[i]);
-        if (state.info && state.model) return state;
+        if (state.tokenCount && state.model) return state;
       }
 
       end = start;
@@ -129,9 +138,18 @@ function applyLine(state, line) {
   if (entry.type === 'turn_context' && payload.model && !state.model) {
     state.model = payload.model;
     state.effort = payload.effort || null;
-  } else if (payload.type === 'token_count' && payload.info && !state.info) {
-    state.info = payload.info;
+  } else if (payload.type === 'token_count' && !state.tokenCount) {
+    state.tokenCount = true;
+    state.info = payload.info || null;
     state.rateLimits = payload.rate_limits || null;
+  } else if (payload.type === 'task_complete' && !state.tokenCount && !state.sawTaskComplete) {
+    // token_count より先に見つかる = そのターンのほうが新しい。
+    // token_count の使用率は上限到達に遅れて追いつくので、新しいエラーのほうを信じる
+    state.sawTaskComplete = true;
+    const error = payload.error;
+    if (error && error.codex_error_info === 'usage_limit_exceeded') {
+      state.limitMessage = error.message || null;
+    }
   }
 }
 
@@ -145,7 +163,7 @@ function buildSnapshot(state) {
     });
   }
 
-  const contextMetric = buildContextMetric(state.info);
+  const contextMetric = state.info && buildContextMetric(state.info);
   if (contextMetric) metrics.push(contextMetric);
 
   const rateLimits = state.rateLimits || {};
@@ -154,6 +172,7 @@ function buildSnapshot(state) {
     if (metric) metrics.push(metric);
   }
 
+  applyLimitReached(metrics, state.limitMessage);
   metrics.sort(byRateLimitWindow);
 
   return {
@@ -170,6 +189,56 @@ function buildContextMetric(info) {
   if (typeof used !== 'number' || typeof size !== 'number' || size <= 0) return null;
 
   return buildPercentMetric('Context', used / size * 100);
+}
+
+// 上限に到達すると rate_limits の窓情報が丸ごと null で返ることがあり、そのままでは
+// 残量が分からなくなる。エラーメッセージから復帰時刻を読んで 100% として埋める。
+// rate_limits.rate_limit_reached_type も同じ用途に見えるが、手元のログでは常に null で
+// 取りうる値を確認できていないため使っていない
+function applyLimitReached(metrics, message) {
+  const reached = message && parseLimitReached(message);
+  if (!reached) return;
+
+  const metric = buildPercentMetric(reached.title, 100, formatResetTime(reached.resetsAt));
+  const index = metrics.findIndex(m => m.title === reached.title);
+
+  if (index >= 0) {
+    metrics[index] = metric;
+  } else {
+    metrics.push(metric);
+  }
+}
+
+// Codex は復帰が当日なら時刻だけ、翌日以降なら日付付きで出す。
+// どちらの窓が尽きたかは返ってこないので、この違いから 5h / 7d を推定する。
+// 5h の窓が日をまたぐと 7d と誤判定するが、窓を偽るよりはましなので判定できた場合だけ扱う
+function parseLimitReached(message) {
+  const match = /try again at (.+?)\.?\s*$/.exec(message);
+  if (!match) return null;
+
+  const text = match[1];
+  const dated = /^([A-Z][a-z]{2}) (\d{1,2})(?:st|nd|rd|th)?, (\d{4}) (.+)$/.exec(text);
+  if (dated) {
+    const reset = new Date(`${dated[1]} ${dated[2]}, ${dated[3]} ${dated[4]}`);
+    return isNaN(reset.getTime()) ? null : { title: '7d', resetsAt: reset.getTime() / 1000 };
+  }
+
+  const timeOnly = /^(\d{1,2}):(\d{2})\s*(AM|PM)$/i.exec(text);
+  if (timeOnly) {
+    const reset = nextOccurrence(Number(timeOnly[1]) % 12 + (/pm/i.test(timeOnly[3]) ? 12 : 0), Number(timeOnly[2]));
+    return { title: '5h', resetsAt: reset.getTime() / 1000 };
+  }
+
+  return null;
+}
+
+function nextOccurrence(hours, minutes) {
+  const reset = new Date();
+  reset.setHours(hours, minutes, 0, 0);
+  // 復帰時刻は必ず未来なので、過ぎていれば翌日とみなす
+  if (reset.getTime() <= Date.now()) reset.setDate(reset.getDate() + 1);
+
+  return reset;
 }
 
 function buildRateLimitMetric(window) {
