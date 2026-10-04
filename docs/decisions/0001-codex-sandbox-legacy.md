@@ -7,9 +7,12 @@
 ## 決定
 
 `default_permissions` と `[permissions.*]` を使う。
-`program-edit` プロファイルは `/Users/fumiakimuramatsu/Program` をワークスペースに追加し、通常のファイルと `.agents/` を書き込み可能にする。
+`program-edit` プロファイルは `/Users/fumiakimuramatsu/Program` をワークスペースに追加し、通常のファイル、`.agents/`、各リポジトリの `.git/` を書き込み可能にする。
 
-`:workspace` を継承し、`.git/` と `.codex/` の読み取り専用保護を維持する。プロジェクト内の資格情報に使われる次のパターンは、読み書きを拒否する。
+`:workspace` を継承し、`.codex/` の読み取り専用保護を維持する。`.git/` の書き込み許可は、承認を求めず `git fetch` などを実行するための例外とする。
+`"**/.git" = "write"` のように `**/` で始まる glob は `deny` にしか使えず、`write` を書くと設定全体が読み込めなくなり Codex が起動しない（0.160.0 で確認）。そのため `.git` は完全一致の 1 行だけにしている。0.160.0 の `codex sandbox` では、この行が無くても他リポジトリを含む `.git/` に書き込めた。
+
+プロジェクト内の資格情報に使われる次のパターンは、読み書きを拒否する。
 
 - `.env`、`.env.*`、`.netrc`（サブディレクトリを含む）
 - `*.pem`、`*.key`、`*.p8`、`*.p12`、`*.mobileprovision`（サブディレクトリを含む）

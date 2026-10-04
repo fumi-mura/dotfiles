@@ -11,6 +11,7 @@ extends = ":workspace"
 "/Users/fumiakimuramatsu/Program" = true
 
 [permissions.program-edit.filesystem.":workspace_roots"]
+".git" = "write"
 ".agents" = "write"
 ".env" = "deny"
 ".env.*" = "deny"
