@@ -1,7 +1,10 @@
 project_doc_fallback_filenames = [ "AGENTS.md", ".codex/AGENTS.md" ]
-model = "gpt-5.5"
+model = "gpt-6-sol"
 model_reasoning_effort = "medium"
 default_permissions = "program-edit"
+
+notify = ["/Users/fumiakimuramatsu/.codex/computer-use/Codex Computer Use.app/Contents/SharedSupport/SkyComputerUseClient.app/Contents/MacOS/SkyComputerUseClient", "turn-ended"]
+service_tier = "default"
 
 [permissions.program-edit]
 description = "Program 配下を編集しつつ、管理領域と資格情報を保護する。"
@@ -39,16 +42,18 @@ enabled = true
 
 [tui]
 status_line = [ "model-with-reasoning", "project-name", "git-branch", "context-used", "five-hour-limit", "weekly-limit", "thread-id" ]
+screen_reader_detection_done = true
 
 [tui.model_availability_nux]
 "gpt-5.5" = 4
 gpt-6-astra = 4
+"gpt-6.1-sol" = 4
 
 [notice]
 hide_rate_limit_model_nudge = true
 
 [notice.model_migrations]
-"gpt-5.4" = "gpt-5.5"
+"gpt-5.5" = "gpt-5.6-luna"
 
 [projects."/Users/fumiakimuramatsu/Program/dotfiles"]
 trust_level = "trusted"
@@ -86,18 +91,6 @@ trust_level = "trusted"
 [projects."/Users/fumiakimuramatsu/Program/tokutabi"]
 trust_level = "trusted"
 
-[projects."/Users/fumiakimuramatsu/Program/Pochi"]
-trust_level = "trusted"
-
-[projects."/Users/fumiakimuramatsu/Program/Pine"]
-trust_level = "trusted"
-
-[projects."/Users/fumiakimuramatsu/Program/okosuyo"]
-trust_level = "trusted"
-
-[projects."/Users/fumiakimuramatsu/Program/Nurtown"]
-trust_level = "trusted"
-
 [projects."/Users/fumiakimuramatsu/Program/fumi-coach"]
 trust_level = "trusted"
 
@@ -105,9 +98,6 @@ trust_level = "trusted"
 trust_level = "trusted"
 
 [projects."/Users/fumiakimuramatsu/Program/inspect-app-tool"]
-trust_level = "trusted"
-
-[projects."/Users/fumiakimuramatsu/Program/mokumoku"]
 trust_level = "trusted"
 
 [projects."/Users/fumiakimuramatsu/Program/appstore-research"]
@@ -118,6 +108,20 @@ trust_level = "trusted"
 
 [projects."/Users/fumiakimuramatsu/Program/asc-screenshots"]
 trust_level = "trusted"
+
+[projects."/Users/fumiakimuramatsu/Program/asc-screenshots-demo"]
+trust_level = "trusted"
+
+[projects."/Users/fumiakimuramatsu/Documents/Codex/2026-09-25/google-drive-plugin-google-drive-openai"]
+trust_level = "trusted"
+
+[projects."/Users/fumiakimuramatsu/Documents/Codex/2026-09-25/referenced-chatgpt-conversation-this-is-an"]
+trust_level = "trusted"
+
+[projects."/Users/fumiakimuramatsu/Documents/Codex/2026-09-25/realtime-voice-chat"]
+trust_level = "trusted"
+
+[hooks.state]
 
 [hooks.state."/Users/fumiakimuramatsu/.codex/hooks.json:stop:0:0"]
 trusted_hash = "sha256:e3db6ab101a532dca641f8bf3840782b1812e1cd798ae1152a7d3441c2a4148b"
@@ -131,6 +135,101 @@ trusted_hash = "sha256:cf2d4ed2539f10b636895dec5c942d758526e9f034496bf6b09fd5702
 [hooks.state."/Users/fumiakimuramatsu/.codex/hooks.json:stop:0:1"]
 trusted_hash = "sha256:8a30b2699547e2885b08a0a3a50dd43ba63d63d415b32ae2fc38425c704e007b"
 
+[hooks.state."/Users/fumiakimuramatsu/.codex/hooks.json:pre_tool_use:0:0"]
+trusted_hash = "sha256:33153c88ce09e9a5b899b9cb33dd23382be394a3e1cdb421e44e0b3778e8bdf2"
+
+[hooks.state."/Users/fumiakimuramatsu/.codex/hooks.json:permission_request:1:0"]
+trusted_hash = "sha256:bd2c29369e47a438a3f2c1c18896d7bd86ce58c0eb5542f1c3b879e427f92fc9"
+
+[hooks.state."/Users/fumiakimuramatsu/.codex/hooks.json:post_tool_use:0:0"]
+trusted_hash = "sha256:a452131ceaecacb08404d1a8d49d85315fdf109905d152859c32b538c9002f93"
+
+[hooks.state."/Users/fumiakimuramatsu/.codex/hooks.json:session_start:0:0"]
+trusted_hash = "sha256:d853ef9fbaf2ff5c8504bf2463675664aaf29a8016c6a35293a6ddc053b4f030"
+
+[hooks.state."/Users/fumiakimuramatsu/.codex/hooks.json:user_prompt_submit:0:0"]
+trusted_hash = "sha256:5383e8af0fe09d96df4e6d0f5f3edaec15485d6162a1a749b5c69e7242eb0478"
+
+[hooks.state."/Users/fumiakimuramatsu/.codex/hooks.json:subagent_start:0:0"]
+trusted_hash = "sha256:269737162a0cf2b29b3e40df23411c02a8bbdeb5f471243c924dac116624cdcf"
+
+[hooks.state."/Users/fumiakimuramatsu/.codex/hooks.json:subagent_stop:1:0"]
+trusted_hash = "sha256:62ff9ef7fcca3784011e955f35ee3612b11168b2f62bd772f08adefb918d34be"
+
+[hooks.state."/Users/fumiakimuramatsu/.codex/hooks.json:stop:1:0"]
+trusted_hash = "sha256:1ae8ee19d95298f7bc4821368a7d4600b9f9d36c68695812c19419b28b5ad53e"
+
+[hooks.state."/Users/fumiakimuramatsu/.codex/hooks.json:interrupt:0:0"]
+trusted_hash = "sha256:78b430d1d7794c49e6d83a36964d4082d05ec72023ccc38244e97b8e08d054d2"
+
 [mcp_servers.pencil]
 command = "/Applications/Pen.app/Contents/Resources/app.asar.unpacked/out/mcp-server-darwin-arm64"
 args = [ "--app", "desktop", "--agent", "codexCLI" ]
+
+[mcp_servers.node_repl]
+args = []
+command = "/Applications/ChatGPT.app/Contents/Resources/cua_node/bin/node_repl"
+startup_timeout_sec = 120
+
+[mcp_servers.node_repl.env]
+NODE_REPL_NATIVE_PIPE_CONNECT_TIMEOUT_MS = "1000"
+NODE_REPL_NODE_MODULE_DIRS = "/Applications/ChatGPT.app/Contents/Resources/cua_node/lib/node_modules"
+NODE_REPL_NODE_PATH = "/Applications/ChatGPT.app/Contents/Resources/cua_node/bin/node"
+NODE_REPL_TRUSTED_CODE_PATHS = "/Users/fumiakimuramatsu/.codex:/Applications/ChatGPT.app/Contents/Resources/cua_node/lib/node_modules"
+CODEX_HOME = "/Users/fumiakimuramatsu/.codex"
+BROWSER_USE_AVAILABLE_BACKENDS = "chrome,iab"
+BROWSER_USE_TINYSKY_ENABLED = "1"
+NODE_REPL_INSTRUCTIONS_USE_CASE_BROWSER = ""
+NODE_REPL_INSTRUCTIONS_USE_CASE_CHROME = ""
+NODE_REPL_INSTRUCTIONS_USE_CASE_COMPUTER_USE = ""
+BROWSER_USE_CODEX_APP_BUILD_FLAVOR = "prod"
+BROWSER_USE_CODEX_APP_VERSION = "26.924.22138"
+NODE_REPL_TRUSTED_SERVICES = '{"browser":"/Users/fumiakimuramatsu/.codex/plugins/cache/openai-bundled/browser/26.924.22138/scripts/browser-service.mjs","sky":"@oai/sky/service"}'
+SKY_CUA_SERVICE_PATH = "/Users/fumiakimuramatsu/.codex/computer-use/Codex Computer Use.app"
+CODEX_CLI_PATH = "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex"
+
+[desktop]
+followUpQueueMode = "steer"
+conversationDetailMode = "STEPS_COMMANDS"
+ambient-suggestions-enabled = true
+composerEnterBehavior = "cmdAlways"
+show-context-window-usage = true
+localeOverride = "ja-JP"
+
+[marketplaces.openai-bundled]
+source_type = "local"
+source = "/Users/fumiakimuramatsu/.codex/.tmp/bundled-marketplaces/openai-bundled"
+
+[marketplaces.openai-primary-runtime]
+source_type = "local"
+source = "/Users/fumiakimuramatsu/.cache/codex-runtimes/codex-primary-runtime/plugins/openai-primary-runtime"
+
+[plugins."codex-app-tools@openai-bundled"]
+enabled = true
+
+[plugins."browser@openai-bundled"]
+enabled = true
+
+[plugins."unified-computer-use@openai-bundled"]
+enabled = true
+
+[plugins."computer-use@openai-bundled"]
+enabled = true
+
+[plugins."visualize@openai-bundled"]
+enabled = true
+
+[plugins."documents@openai-primary-runtime"]
+enabled = true
+
+[plugins."pdf@openai-primary-runtime"]
+enabled = true
+
+[plugins."spreadsheets@openai-primary-runtime"]
+enabled = true
+
+[plugins."presentations@openai-primary-runtime"]
+enabled = true
+
+[plugins."template-creator@openai-primary-runtime"]
+enabled = true
