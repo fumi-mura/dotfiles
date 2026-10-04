@@ -192,15 +192,18 @@ console.log('case 8: 巨大なセッションでも末尾だけ読む');
   fs.closeSync(handle);
 
   const sizeMb = fs.statSync(file).size / 1024 / 1024;
-  const measured = spawnSync('/usr/bin/time', ['-l', SCRIPT], {
+  const memoryProbe = 'require(process.argv[1]); process.stderr.write(`RUNCAT_MAX_RSS_KIB=${process.resourceUsage().maxRSS}\n`);';
+  const measured = spawnSync(process.execPath, ['-e', memoryProbe, SCRIPT], {
     input: '{}',
     encoding: 'utf-8',
     env: { ...process.env, CODEX_HOME: home }
   });
-  const rssMb = Number((/(\d+)\s+maximum resident set size/.exec(measured.stderr) || [])[1]) / 1024 / 1024;
+  const rssMatch = /RUNCAT_MAX_RSS_KIB=(\d+)/.exec(measured.stderr);
+  const rssMb = rssMatch ? Number(rssMatch[1]) / 1024 : Infinity;
   const snapshot = JSON.parse(fs.readFileSync(path.join(home, 'runcat-usage.json'), 'utf-8'));
 
   check(`${sizeMb.toFixed(0)}MB のログでも正しく読める`, !!row(snapshot, 'Context'), JSON.stringify(snapshot.metrics));
+  check('メモリ計測が成功する', measured.status === 0 && rssMatch !== null, measured.error?.message || measured.stderr);
   check(`メモリ使用量がファイルサイズに引きずられない (${rssMb.toFixed(0)}MB)`, rssMb < 150, `${rssMb.toFixed(0)}MB`);
 
   fs.rmSync(home, { recursive: true, force: true });
