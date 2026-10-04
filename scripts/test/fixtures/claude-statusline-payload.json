@@ -6,8 +6,8 @@
     "level": "high"
   },
   "model": {
-    "id": "claude-opus-5",
-    "display_name": "Opus 5"
+    "id": "claude-opus-5.5",
+    "display_name": "Opus 5.5"
   },
   "workspace": {
     "current_dir": "/tmp/sample-project",
