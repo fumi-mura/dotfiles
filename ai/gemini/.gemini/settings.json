@@ -67,5 +67,51 @@
       ],
       "env": {}
     }
+  },
+  "hooks": {
+    "BeforeAgent": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if [ -f '/Users/fumiakimuramatsu/.orca/agent-hooks/gemini-hook.sh' ] && [ -r '/Users/fumiakimuramatsu/.orca/agent-hooks/gemini-hook.sh' ] && [ -x '/Users/fumiakimuramatsu/.orca/agent-hooks/gemini-hook.sh' ]; then /bin/sh '/Users/fumiakimuramatsu/.orca/agent-hooks/gemini-hook.sh'; else { command -p cat 2>/dev/null || cat; } >/dev/null 2>&1 || :; fi",
+            "timeout": 10000
+          }
+        ]
+      }
+    ],
+    "AfterAgent": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if [ -f '/Users/fumiakimuramatsu/.orca/agent-hooks/gemini-hook.sh' ] && [ -r '/Users/fumiakimuramatsu/.orca/agent-hooks/gemini-hook.sh' ] && [ -x '/Users/fumiakimuramatsu/.orca/agent-hooks/gemini-hook.sh' ]; then /bin/sh '/Users/fumiakimuramatsu/.orca/agent-hooks/gemini-hook.sh'; else { command -p cat 2>/dev/null || cat; } >/dev/null 2>&1 || :; fi",
+            "timeout": 10000
+          }
+        ]
+      }
+    ],
+    "AfterTool": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if [ -f '/Users/fumiakimuramatsu/.orca/agent-hooks/gemini-hook.sh' ] && [ -r '/Users/fumiakimuramatsu/.orca/agent-hooks/gemini-hook.sh' ] && [ -x '/Users/fumiakimuramatsu/.orca/agent-hooks/gemini-hook.sh' ]; then /bin/sh '/Users/fumiakimuramatsu/.orca/agent-hooks/gemini-hook.sh'; else { command -p cat 2>/dev/null || cat; } >/dev/null 2>&1 || :; fi",
+            "timeout": 10000
+          }
+        ]
+      }
+    ],
+    "BeforeTool": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if [ -f '/Users/fumiakimuramatsu/.orca/agent-hooks/gemini-hook.sh' ] && [ -r '/Users/fumiakimuramatsu/.orca/agent-hooks/gemini-hook.sh' ] && [ -x '/Users/fumiakimuramatsu/.orca/agent-hooks/gemini-hook.sh' ]; then /bin/sh '/Users/fumiakimuramatsu/.orca/agent-hooks/gemini-hook.sh'; else { command -p cat 2>/dev/null || cat; } >/dev/null 2>&1 || :; fi",
+            "timeout": 10000
+          }
+        ]
+      }
+    ]
   }
 }
