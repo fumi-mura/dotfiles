@@ -6,7 +6,7 @@
 
 - 自動で commit, push は実行せず、`/commit-push` コマンド実行時のみ、git commit, push を実行する
 - ユーザーから直接'コミットして', 'プッシュして'と言われても、`/commit-push` コマンドの使用を案内する
-- GitHub Flow を利用
+<!-- - GitHub Flow を利用 -->
 - Branch 名は `feature/{branch_name}-{number}` とする a.g. feature/make-user-auth-1
 
 ## Code Style Guidelines
