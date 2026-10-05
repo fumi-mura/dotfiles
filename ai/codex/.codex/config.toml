@@ -13,6 +13,14 @@ extends = ":workspace"
 [permissions.program-edit.workspace_roots]
 "/Users/fumiakimuramatsu/Program" = true
 
+[permissions.program-edit.filesystem]
+"~/.claude/skills" = "write"
+"~/.claude/hooks" = "write"
+"~/.codex/skills" = "write"
+"~/.codex/hooks" = "write"
+"~/.codex/rules" = "write"
+"~/.gemini/skills" = "write"
+
 [permissions.program-edit.filesystem.":workspace_roots"]
 ".git" = "write"
 ".agents" = "write"

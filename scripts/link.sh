@@ -12,6 +12,10 @@ link_file() {
   local source_path="$1"
   local target_path="$2"
 
+  if [[ -L "${target_path}" && "$(readlink "${target_path}")" == "${source_path}" ]]; then
+    return
+  fi
+
   ensure_directory "$(dirname "${target_path}")"
   ln -fnsv "${source_path}" "${target_path}"
 }
@@ -39,6 +43,9 @@ link_directory_tree() {
   while IFS= read -r -d '' source_path; do
     rel_path="${source_path#"${source_root}/"}"
     target_path="${target_root}/${rel_path}"
+    if [[ -L "${target_path}" && "$(readlink "${target_path}")" == "${source_path}" ]]; then
+      continue
+    fi
     rm -rf "${target_path}"
     ln -snfv "${source_path}" "${target_path}"
   done < <(find "${source_root}" -mindepth 1 -maxdepth 1 -type d -print0)
