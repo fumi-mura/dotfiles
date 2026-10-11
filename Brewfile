@@ -3,6 +3,7 @@ tap "idoavrah/homebrew"
 tap "yukiarrr/tap"
 
 brew "aqua"
+brew "asc"
 brew "awscli"
 brew "direnv"
 brew "ecsk"
@@ -50,8 +51,9 @@ cask "readdle-spark"
 # cask "sequel-ace"
 cask "shottr"
 cask "slack"
-cask "vrew"
 cask "visual-studio-code"
+cask "voiceink"
+cask "vrew"
 cask "zoom"
 
 # Font
