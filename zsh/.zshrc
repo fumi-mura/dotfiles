@@ -1,6 +1,10 @@
 # Kiro CLI pre block. Keep at the top of this file.
 [[ -f "${HOME}/Library/Application Support/kiro-cli/shell/zshrc.pre.zsh" ]] && builtin source "${HOME}/Library/Application Support/kiro-cli/shell/zshrc.pre.zsh"
 
+# zsh-autocomplete は compinit を内部で実行するため、compdef より前に読み込む
+source /opt/homebrew/share/zsh-autocomplete/zsh-autocomplete.plugin.zsh
+source /opt/homebrew/share/zsh-autosuggestions/zsh-autosuggestions.zsh
+
 # Terminal
 source ~/.zsh/git-prompt.sh
 GIT_PS1_SHOWDIRTYSTATE=true
@@ -83,6 +87,9 @@ alias tgaa='terragrunt run-all apply'
 
 # Added by Antigravity IDE
 export PATH="/Users/fumiakimuramatsu/.antigravity-ide/antigravity-ide/bin:$PATH"
+
+# 他のプラグインが定義した widget もハイライト対象にするため、最後に読み込む
+source /opt/homebrew/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 
 # Kiro CLI post block. Keep at the bottom of this file.
 [[ -f "${HOME}/Library/Application Support/kiro-cli/shell/zshrc.post.zsh" ]] && builtin source "${HOME}/Library/Application Support/kiro-cli/shell/zshrc.post.zsh"

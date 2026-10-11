@@ -25,6 +25,9 @@ brew "trivy"
 brew "uv"
 brew "xcodegen"
 brew "xcode-build-server"
+brew "zsh-autocomplete"
+brew "zsh-autosuggestions"
+brew "zsh-syntax-highlighting"
 
 cask "alfred"
 # cask "kiro-cli" # 既にインストール済みだとエラーになるためコメントアウト
