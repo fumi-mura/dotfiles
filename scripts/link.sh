@@ -66,6 +66,7 @@ main() {
   link_file "${ROOT_DIR}/shared/ai/AGENTS.md" "${HOME}/.claude/CLAUDE.md"
   link_tree "${ROOT_DIR}/shared/ai/skills" "${HOME}/.claude/skills"
   link_file "${ROOT_DIR}/shared/ai/hooks/notify.sh" "${HOME}/.claude/hooks/notify.sh"
+  link_file "${ROOT_DIR}/shared/ai/hooks/japanese-reply.py" "${HOME}/.claude/hooks/japanese-reply.py"
 
   log "Link Codex settings"
   link_tree "${ROOT_DIR}/ai/codex" "${HOME}"
