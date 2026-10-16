@@ -67,6 +67,16 @@ main() {
   link_tree "${ROOT_DIR}/shared/ai/skills" "${HOME}/.claude/skills"
   link_file "${ROOT_DIR}/shared/ai/hooks/notify.sh" "${HOME}/.claude/hooks/notify.sh"
   link_file "${ROOT_DIR}/shared/ai/hooks/japanese-reply.py" "${HOME}/.claude/hooks/japanese-reply.py"
+  link_file "${ROOT_DIR}/shared/ai/hooks/quiet-commands.py" "${HOME}/.claude/hooks/quiet-commands.py"
+  link_file "${ROOT_DIR}/shared/ai/hooks/shrink-image.py" "${HOME}/.claude/hooks/shrink-image.py"
+  link_file "${ROOT_DIR}/shared/ai/hooks/idle-reminder.py" "${HOME}/.claude/hooks/idle-reminder.py"
+
+  log "Link AI commands"
+  link_file "${ROOT_DIR}/bin/quiet" "${HOME}/.local/bin/quiet"
+  link_file "${ROOT_DIR}/bin/shot" "${HOME}/.local/bin/shot"
+  link_file "${ROOT_DIR}/bin/ai-usage" "${HOME}/.local/bin/ai-usage"
+  link_file "${ROOT_DIR}/bin/ai-usage-claude" "${HOME}/.local/bin/ai-usage-claude"
+  link_file "${ROOT_DIR}/bin/ai-usage-codex" "${HOME}/.local/bin/ai-usage-codex"
 
   log "Link Codex settings"
   link_tree "${ROOT_DIR}/ai/codex" "${HOME}"

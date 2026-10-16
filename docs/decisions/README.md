@@ -14,3 +14,4 @@
 |---|---|---|
 | [0001](0001-codex-sandbox-legacy.md) | Codex のサンドボックスはレガシー形式を使う | 2026-08-14 |
 | [0002](0002-claude-japanese-reply-hook.md) | Claude の返答が英語なら Stop フックで差し戻す | 2026-10-16 |
+| [0003](0003-ai-token-saving.md) | AI のトークンを、指示ではなく設定とフックで節約する | 2026-10-16 |

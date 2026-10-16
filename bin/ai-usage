@@ -1,0 +1,16 @@
+#!/bin/bash
+# AI ごとの使用量の集計への入口。ai-usage claude|codex [引数] で片方、AI を省くと両方を出す。
+# 集計は記録の形が違うため、ai-usage-claude と ai-usage-codex に分けている。
+set -euo pipefail
+
+dir="$(dirname "$(readlink -f "$0")")"
+case "${1:-}" in
+  claude | codex)
+    tool="$1"
+    shift
+    exec "${dir}/ai-usage-${tool}" "$@"
+    ;;
+esac
+"${dir}/ai-usage-claude" "$@"
+echo
+"${dir}/ai-usage-codex" "$@"

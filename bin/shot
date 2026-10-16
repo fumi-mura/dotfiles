@@ -1,0 +1,12 @@
+#!/bin/bash
+# shot.swift を初回と変更時だけコンパイルし、以降は同じ実行ファイルを使う。毎回 swift で実行すると数秒かかるため。
+set -euo pipefail
+
+source_path="$(dirname "$(readlink -f "$0")")/shot.swift"
+cache_dir="${TMPDIR:-/tmp}/shot-bin"
+binary="${cache_dir}/shot-$(shasum "${source_path}" | cut -c1-12)"
+if [[ ! -x "${binary}" ]]; then
+  mkdir -p "${cache_dir}"
+  CLANG_MODULE_CACHE_PATH="${cache_dir}/module-cache" swiftc -O "${source_path}" -o "${binary}" >&2
+fi
+exec "${binary}" "$@"

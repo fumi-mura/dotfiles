@@ -1,0 +1,68 @@
+#!/usr/bin/env python3
+# コマンドを実行し、長い出力をエラー・件数の行と末尾だけに絞って出す。全文はログファイルに残し、終了コードはそのまま返す。
+# AI の会話に残る出力を減らすため。テストやビルドのコマンドは quiet-commands.py フックが自動でこれを通す。
+import os
+import re
+import subprocess
+import sys
+import tempfile
+import time
+
+SHORT_LINES = 30
+TAIL_LINES = 8
+MAX_KEY_LINES = 40
+MAX_LINE_LENGTH = 300
+
+ANSI = re.compile(r"\x1b\[[0-9;?]*[A-Za-z]")
+KEY = re.compile(
+    r"error|fail|fatal|panic|exception|traceback|assert|✘|✗"
+    r"|executed \d+ test|tests? (passed|failed)|\d+ (passed|failed)|test result|test suite .* (passed|failed)"
+    r"|build (succeeded|failed)|\*\* .* (succeeded|failed) \*\*",
+    re.IGNORECASE,
+)
+
+
+def shorten(line):
+    return line if len(line) <= MAX_LINE_LENGTH else line[:MAX_LINE_LENGTH] + f" …（{len(line)}文字）"
+
+
+def summarize(lines):
+    if len(lines) <= SHORT_LINES:
+        return [shorten(line) for line in lines]
+    tail_start = len(lines) - TAIL_LINES
+    keys, seen = [], set()
+    for line in lines[:tail_start]:
+        if KEY.search(line) and line not in seen:
+            seen.add(line)
+            keys.append(shorten(line))
+    if len(keys) > MAX_KEY_LINES:
+        keys = keys[:MAX_KEY_LINES] + [f"…（ほかに {len(keys) - MAX_KEY_LINES} 行）"]
+    return keys + ["--- 末尾 ---"] + [shorten(line) for line in lines[tail_start:]]
+
+
+def main():
+    args = sys.argv[1:]
+    if args[:1] == ["--"]:
+        args = args[1:]
+    if not args:
+        print("使い方: quiet <コマンド> [引数...]", file=sys.stderr)
+        return 64
+    log_dir = os.environ.get("QUIET_LOG_DIR") or os.path.join(tempfile.gettempdir(), "quiet-logs")
+    os.makedirs(log_dir, exist_ok=True)
+    # quiet-commands.py は「シェル -c コマンド」の形で渡すので、ログの名前は中のコマンドから付ける
+    command = args[2] if len(args) >= 3 and args[1] == "-c" else args[0]
+    words = re.split(r"\s*(?:&&|;)\s*", command.strip())[-1].split()
+    name = re.sub(r"[^A-Za-z0-9_.-]+", "-", "-".join(os.path.basename(word) for word in words[:2]))[:40] or "command"
+    log_path = os.path.join(log_dir, f"{time.strftime('%Y%m%d-%H%M%S')}-{os.getpid()}-{name}.log")
+    with open(log_path, "wb") as log:
+        status = subprocess.run(args, stdout=log, stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL).returncode
+    with open(log_path, encoding="utf-8", errors="replace") as log:
+        lines = [ANSI.sub("", line.rstrip("\n")) for line in log]
+    for line in summarize(lines):
+        print(line)
+    print(f"[quiet] exit {status}, {len(lines)} 行, log: {log_path}")
+    return status
+
+
+if __name__ == "__main__":
+    sys.exit(main())

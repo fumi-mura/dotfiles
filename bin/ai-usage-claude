@@ -1,0 +1,221 @@
+#!/usr/bin/env python3
+# Claude Code の会話記録（~/.claude/projects）から、期間内のトークン使用量をセッションごと・依頼ごとに集計する。
+# 同じ返答は分割して何行かに記録されるため、メッセージの id で1回と数える。
+import argparse
+import collections
+import glob
+import json
+import os
+from datetime import date, datetime, time, timedelta
+
+# 割合の重み。キャッシュ読み込み 0.1、書き込み 1.25、出力 5 は API 単価の比（入力を1とする）。
+WEIGHTS = {"input": 1.0, "cache_write": 1.25, "cache_read": 0.1, "output": 5.0}
+# 読み直しの内訳で、画像1枚を何トークンと見なすか。実際の値は画像の大きさで変わるので目安。
+IMAGE_TOKENS = 1500
+
+
+def fmt(n):
+    if n >= 1e6:
+        return f"{n / 1e6:.1f}M"
+    if n >= 1e3:
+        return f"{n / 1e3:.1f}k"
+    return str(int(n))
+
+
+def estimate_tokens(text):
+    ascii_count = sum(1 for ch in text if ord(ch) < 128)
+    return ascii_count / 4 + (len(text) - ascii_count) * 0.9
+
+
+def text_of(content):
+    if isinstance(content, str):
+        return content
+    if isinstance(content, list):
+        return " ".join(b.get("text", "") for b in content if isinstance(b, dict) and b.get("type") == "text")
+    return ""
+
+
+def prompt_label(entry):
+    if entry.get("type") != "user" or entry.get("isMeta"):
+        return None
+    text = text_of((entry.get("message") or {}).get("content"))
+    if not text.strip() or text.startswith("<local-command") or text.startswith("<system-reminder>"):
+        return None
+    if "This session is being continued" in text:
+        return None
+    if "<command-name>" in text:
+        text = text.split("<command-name>")[1].split("</command-name>")[0]
+    return " ".join(text.split())[:40]
+
+
+def weight(row):
+    return sum(row[key] * value for key, value in WEIGHTS.items())
+
+
+def parse_time(stamp):
+    return datetime.fromisoformat(stamp.replace("Z", "+00:00")).astimezone()
+
+
+class Breakdown:
+    """会話に残り続け、以降の返答のたびに読み直される量を、中身の種類ごとに推定する。"""
+
+    def __init__(self):
+        self.reread = collections.Counter()
+
+    def track(self, entry, live, tools):
+        message = entry.get("message") or {}
+        content = message.get("content")
+        if entry.get("type") == "user":
+            if isinstance(content, str):
+                if "This session is being continued" in content:
+                    live.clear()
+                    live["要約"] += estimate_tokens(content)
+                else:
+                    live["ユーザーの発言・通知"] += estimate_tokens(content)
+                return
+            for block in content or []:
+                kind = block.get("type")
+                if kind == "tool_result":
+                    name = tools.get(block.get("tool_use_id"), "")
+                    items = block.get("content")
+                    items = items if isinstance(items, list) else [{"type": "text", "text": items or ""}]
+                    for item in items:
+                        if item.get("type") == "image":
+                            live["画像"] += IMAGE_TOKENS
+                        elif item.get("type") == "text":
+                            label = {"Bash": "Bashの出力", "Read": "Readの出力"}.get(name, "その他のツールの出力")
+                            live[label] += estimate_tokens(item.get("text", ""))
+                elif kind == "image":
+                    live["画像"] += IMAGE_TOKENS
+                elif kind == "text":
+                    live["ユーザーの発言・通知"] += estimate_tokens(block.get("text", ""))
+        elif entry.get("type") == "assistant" and isinstance(content, list):
+            for block in content:
+                kind = block.get("type")
+                if kind == "text":
+                    live["Claudeの文章"] += estimate_tokens(block.get("text", ""))
+                elif kind == "tool_use":
+                    tools[block.get("id")] = block.get("name")
+                    live["ツール呼び出し"] += estimate_tokens(json.dumps(block.get("input", {}), ensure_ascii=False))
+
+    def count(self, live):
+        self.reread.update(live)
+
+
+def collect(root, start, end, breakdown):
+    rows = []
+    for path in glob.glob(os.path.join(root, "**", "*.jsonl"), recursive=True):
+        if os.path.getmtime(path) < start.timestamp():
+            continue
+        session = os.path.basename(path)[:8]
+        project = os.path.basename(os.path.dirname(path))
+        seen, tools, live = set(), {}, collections.Counter()
+        prompt, prompt_index = "（最初の依頼の前）", 0
+        try:
+            lines = open(path, encoding="utf-8").readlines()
+        except OSError:
+            continue
+        for line in lines:
+            try:
+                entry = json.loads(line)
+            except ValueError:
+                continue
+            if entry.get("cwd"):
+                project = os.path.basename(entry["cwd"])
+            label = prompt_label(entry)
+            if label:
+                prompt, prompt_index = label, prompt_index + 1
+            stamp = entry.get("timestamp")
+            message = entry.get("message") or {}
+            usage = message.get("usage")
+            in_range = bool(stamp) and start <= parse_time(stamp) < end
+            if entry.get("type") == "assistant" and usage and message.get("id") not in seen and in_range:
+                seen.add(message.get("id"))
+                if breakdown:
+                    breakdown.count(live)
+                rows.append({
+                    "project": project, "session": session, "time": parse_time(stamp),
+                    "prompt": (session, prompt_index, prompt),
+                    "input": usage.get("input_tokens", 0),
+                    "cache_write": usage.get("cache_creation_input_tokens", 0),
+                    "cache_read": usage.get("cache_read_input_tokens", 0),
+                    "output": usage.get("output_tokens", 0),
+                })
+            if breakdown:
+                breakdown.track(entry, live, tools)
+    return rows
+
+
+def group(rows, key):
+    groups = collections.OrderedDict()
+    for row in sorted(rows, key=lambda r: r["time"]):
+        g = groups.setdefault(key(row), {"rows": [], "input": 0, "cache_write": 0, "cache_read": 0, "output": 0})
+        g["rows"].append(row)
+        for field in WEIGHTS:
+            g[field] += row[field]
+    return groups
+
+
+def context(row):
+    return row["input"] + row["cache_write"] + row["cache_read"]
+
+
+def main():
+    parser = argparse.ArgumentParser(description="Claude Code のトークン使用量を集計する")
+    parser.add_argument("--since", type=date.fromisoformat, default=date.today(), help="開始日 YYYY-MM-DD（省略時は今日）")
+    parser.add_argument("--until", type=date.fromisoformat, help="終了日 YYYY-MM-DD（省略時は開始日）")
+    parser.add_argument("--by", choices=["session", "prompt"], default="session", help="セッションごとか依頼ごとか")
+    parser.add_argument("--breakdown", action="store_true", help="会話に残って読み直される量の内訳も出す")
+    args = parser.parse_args()
+    until = args.until or args.since
+    start = datetime.combine(args.since, time()).astimezone()
+    end = datetime.combine(until + timedelta(days=1), time()).astimezone()
+    root = os.environ.get("CLAUDE_PROJECTS_DIR") or os.path.expanduser("~/.claude/projects")
+    breakdown = Breakdown() if args.breakdown else None
+    rows = collect(root, start, end, breakdown)
+
+    total = {field: sum(r[field] for r in rows) for field in WEIGHTS}
+    total_weight = weight(total) or 1
+    print(f"Claude Code {args.since}〜{until}")
+    print(
+        f"合計: 返答 {len(rows)} 回 / 入力 {fmt(total['input'])} / キャッシュ書き込み {fmt(total['cache_write'])}"
+        f" / キャッシュ読み込み {fmt(total['cache_read'])} / 出力 {fmt(total['output'])}"
+    )
+    if not rows:
+        return
+    print("割合は API 単価の比で重み付けした目安（キャッシュ読み込み 0.1、書き込み 1.25、出力 5）")
+    print()
+    if args.by == "session":
+        print("| # | プロジェクト | セッション | 時間 | 返答 | 平均の長さ | 最大 | キャッシュ読み込み | 出力 | 割合 |")
+        print("|---|---|---|---|---|---|---|---|---|---|")
+        groups = group(rows, lambda r: (r["project"], r["session"]))
+        ordered = sorted(groups.items(), key=lambda kv: -weight(kv[1]))
+        for i, ((project, session), g) in enumerate(ordered, 1):
+            sizes = [context(r) for r in g["rows"]]
+            span = f"{g['rows'][0]['time']:%m/%d %H:%M}–{g['rows'][-1]['time']:%H:%M}"
+            print(
+                f"| {i} | {project} | {session} | {span} | {len(sizes)} | {fmt(sum(sizes) / len(sizes))} | {fmt(max(sizes))}"
+                f" | {fmt(g['cache_read'])} | {fmt(g['output'])} | {weight(g) / total_weight * 100:.0f}% |"
+            )
+    else:
+        print("| # | プロジェクト | 時刻 | 依頼 | 返答 | キャッシュ読み込み | 出力 | 割合 |")
+        print("|---|---|---|---|---|---|---|---|")
+        groups = group(rows, lambda r: r["prompt"])
+        for i, ((session, _, prompt), g) in enumerate(groups.items(), 1):
+            first = g["rows"][0]
+            print(
+                f"| {i} | {first['project']} | {first['time']:%m/%d %H:%M} | {prompt} | {len(g['rows'])}"
+                f" | {fmt(g['cache_read'])} | {fmt(g['output'])} | {weight(g) / total_weight * 100:.0f}% |"
+            )
+    if breakdown:
+        reread_total = sum(breakdown.reread.values()) or 1
+        print()
+        print("読み直しの内訳（推定。文字数からの概算で、画像は1枚1500トークンと見なす）")
+        print("| 中身 | 読み直し | 割合 |")
+        print("|---|---|---|")
+        for label, value in breakdown.reread.most_common():
+            print(f"| {label} | {fmt(value)} | {value / reread_total * 100:.0f}% |")
+
+
+if __name__ == "__main__":
+    main()
