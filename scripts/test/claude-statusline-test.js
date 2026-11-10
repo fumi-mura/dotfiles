@@ -20,12 +20,15 @@ function check(name, cond, detail) {
   }
 }
 
-function run(payload) {
+function run(payload, extraEnv = {}) {
   const outFile = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'runcat-test-')), 'runcat-usage.json');
+  const env = { ...process.env, RUNCAT_OUT_FILE: outFile };
+  // テストを流しているセッションの設定フォルダに結果を左右させない
+  delete env.CLAUDE_CONFIG_DIR;
   const stdout = execFileSync(STATUSLINE, {
     input: JSON.stringify(payload),
     encoding: 'utf-8',
-    env: { ...process.env, RUNCAT_OUT_FILE: outFile }
+    env: { ...env, ...extraEnv }
   });
   const snapshot = fs.existsSync(outFile) ? JSON.parse(fs.readFileSync(outFile, 'utf-8')) : null;
   return { stdout, snapshot };
@@ -181,6 +184,21 @@ console.log('case 6: 小数を含む使用率');
 
   const { stdout } = run(payload);
   check('ステータスラインも小数第一位で揃う', stdout.includes('12.3%'), stdout.trim());
+}
+
+console.log('case 7: チームアカウントの設定フォルダ');
+{
+  const { stdout, snapshot } = run(base, { CLAUDE_CONFIG_DIR: path.join(os.homedir(), '.claude-team') });
+
+  check('RunCat には書き出さない', snapshot === null, JSON.stringify(snapshot));
+  check('ステータスラインは出る', plain(stdout).includes(base.model.display_name), stdout.trim());
+}
+
+console.log('case 8: 個人アカウントの設定フォルダを明示');
+{
+  const { snapshot } = run(base, { CLAUDE_CONFIG_DIR: path.join(os.homedir(), '.claude') });
+
+  check('RunCat に書き出す', snapshot !== null);
 }
 
 console.log(failures === 0 ? '\nAll tests passed' : `\n${failures} test(s) failed`);

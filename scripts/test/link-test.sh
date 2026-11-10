@@ -8,6 +8,19 @@ TEST_HOME="$(mktemp -d)"
 trap 'rm -rf "${TEST_HOME}"' EXIT
 
 HOME="${TEST_HOME}" /bin/bash "${LINK_SH}" >/dev/null || exit 1
+
+REPO_DIR="$(cd "${TEST_DIR}/../.." && pwd)"
+for pair in \
+  ".claude-team/settings.json:ai/claude/.claude/settings.json" \
+  ".claude-team/CLAUDE.md:shared/ai/AGENTS.md" \
+  ".claude-team/skills/dotfiles/SKILL.md:shared/ai/skills/dotfiles/SKILL.md"; do
+  if [[ "$(readlink "${TEST_HOME}/${pair%%:*}")" != "${REPO_DIR}/${pair#*:}" ]]; then
+    echo "FAIL ${pair%%:*} を ${pair#*:} にリンクしていない"
+    exit 1
+  fi
+done
+echo 'ok チームアカウントにも Claude の設定・指示・スキルをリンクする'
+
 zsh_inode="$(stat -f '%i' "${TEST_HOME}/.zshrc")"
 skill_inode="$(stat -f '%i' "${TEST_HOME}/.codex/skills/dotfiles")"
 
