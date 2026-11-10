@@ -6,6 +6,8 @@ TEST_DIR="$(cd "$(dirname "$0")" && pwd)"
 LINK_SH="$(cd "${TEST_DIR}/.." && pwd)/link.sh"
 TEST_HOME="$(mktemp -d)"
 trap 'rm -rf "${TEST_HOME}"' EXIT
+mkdir -p "${TEST_HOME}/.agents/skills/external-sample"
+touch "${TEST_HOME}/.agents/skills/external-sample/SKILL.md"
 
 HOME="${TEST_HOME}" /bin/bash "${LINK_SH}" >/dev/null || exit 1
 
@@ -19,6 +21,10 @@ for pair in \
     exit 1
   fi
 done
+if [[ "$(readlink "${TEST_HOME}/.claude-team/skills/external-sample")" != "${TEST_HOME}/.agents/skills/external-sample" ]]; then
+  echo 'FAIL 外から入れたスキルをチームアカウントにリンクしていない'
+  exit 1
+fi
 echo 'ok チームアカウントにも Claude の設定・指示・スキルをリンクする'
 
 zsh_inode="$(stat -f '%i' "${TEST_HOME}/.zshrc")"
