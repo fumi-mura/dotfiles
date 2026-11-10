@@ -71,6 +71,13 @@ main() {
   link_file "${ROOT_DIR}/shared/ai/hooks/shrink-image.py" "${HOME}/.claude/hooks/shrink-image.py"
   link_file "${ROOT_DIR}/shared/ai/hooks/idle-reminder.py" "${HOME}/.claude/hooks/idle-reminder.py"
 
+  # チームアカウント（zshrc の claude-team）も同じ設定・指示・スキルを使う。
+  # hooks とステータスラインは settings.json が ~/.claude の中を指すので、ここには張らない
+  log "Link Claude team account settings"
+  link_file "${ROOT_DIR}/ai/claude/.claude/settings.json" "${HOME}/.claude-team/settings.json"
+  link_file "${ROOT_DIR}/shared/ai/AGENTS.md" "${HOME}/.claude-team/CLAUDE.md"
+  link_tree "${ROOT_DIR}/shared/ai/skills" "${HOME}/.claude-team/skills"
+
   log "Link AI commands"
   link_file "${ROOT_DIR}/bin/quiet" "${HOME}/.local/bin/quiet"
   link_file "${ROOT_DIR}/bin/shot" "${HOME}/.local/bin/shot"

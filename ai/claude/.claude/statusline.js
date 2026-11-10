@@ -52,7 +52,8 @@ process.stdin.on('end', async () => {
     }
 
     // Write the RunCat Neo custom metrics snapshot
-    writeRunCatSnapshot(data);
+    // RunCat は1つのファイルしか見ないため、チームアカウント（claude-team）の使用率で個人アカウントの表示を上書きしない
+    if (usesDefaultConfigDir()) writeRunCatSnapshot(data);
 
     // Calculate token usage for current session
     let totalTokens = 0;
@@ -154,6 +155,11 @@ function sumUsage(usage) {
     (usage.output_tokens || 0) +
     (usage.cache_creation_input_tokens || 0) +
     (usage.cache_read_input_tokens || 0);
+}
+
+function usesDefaultConfigDir() {
+  const configDir = process.env.CLAUDE_CONFIG_DIR;
+  return !configDir || path.resolve(configDir) === path.join(process.env.HOME, '.claude');
 }
 
 // RunCat Neo watches this file and renders it as a dashboard card.
