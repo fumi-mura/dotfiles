@@ -35,6 +35,7 @@ Mac の設定は `~/Program/dotfiles` で管理している。`~` 配下の設�
 3. 作成・追加したら `make link` を実行する。リンクを張るまでどの AI にも読み込まれない
 4. `~/.agents/skills/` にあるスキルは外部からインストールしたもの。このリポの管理外なので編集しない
 5. 本文は手順と判断に要ることだけを書く
+6. 外部のスキルは `npx skills add <owner/repo> -g -s <name>` で `~/.agents/skills/` に入れ、そのあと `make link` でチームアカウント(`~/.claude-team`)にも張る
 
 ## 設定を変更したあと
 

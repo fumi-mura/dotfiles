@@ -77,6 +77,10 @@ main() {
   link_file "${ROOT_DIR}/ai/claude/.claude/settings.json" "${HOME}/.claude-team/settings.json"
   link_file "${ROOT_DIR}/shared/ai/AGENTS.md" "${HOME}/.claude-team/CLAUDE.md"
   link_tree "${ROOT_DIR}/shared/ai/skills" "${HOME}/.claude-team/skills"
+  # npx skills で入れたスキルの本体は ~/.agents/skills にあり、npx skills は ~/.claude にしかリンクを張らない
+  if [[ -d "${HOME}/.agents/skills" ]]; then
+    link_directory_tree "${HOME}/.agents/skills" "${HOME}/.claude-team/skills"
+  fi
 
   log "Link AI commands"
   link_file "${ROOT_DIR}/bin/quiet" "${HOME}/.local/bin/quiet"
