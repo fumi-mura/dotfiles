@@ -13,6 +13,13 @@ GIT_PS1_SHOWSTASHSTATE=true
 GIT_PS1_SHOWUPSTREAM=auto
 setopt PROMPT_SUBST ; PS1='%F{cyan}Fumis MBA%f %~ %F{red}$(__git_ps1 "(%s)")%f \$ '
 
+# Claude
+# 個人アカウント。~/.claude で個人アカウントにログインしていて、dotfiles のリンクもそこに張るので、設定フォルダを分けない
+alias claude-personal='claude'
+
+# チームアカウント
+alias claude-team='CLAUDE_CONFIG_DIR=~/.claude-team claude'
+
 # Git
 export PATH=/usr/local/bin/git:$PATH
 
